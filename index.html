@@ -556,7 +556,7 @@ function layoutBoard() {
     slot.el.style.left = slot.px + "px"; slot.el.style.top = slot.py + "px";
     slot.el.style.width = tileW + "px"; slot.el.style.height = tileH + "px";
     const cl = slot.el.querySelector(".slotCenterLabel");
-    if (cl) { const len = cl.textContent.length; cl.style.fontSize = Math.max(9, len <= 2 ? tileH * 0.48 : Math.min(tileH * 0.44, (tileW - 12) / (len * 0.62))) + "px"; }
+    if (cl) { const len = cl.textContent.length; cl.style.fontSize = Math.max(9, len <= 2 ? tileH * 0.48 : Math.min(tileH * 0.44, (tileW - 22) / (len * 0.6))) + "px"; }
   }
   for (const tile of S.tiles.values()) applyTileSize(tile);
   S.boardRect = board.getBoundingClientRect();
@@ -607,7 +607,9 @@ function applyTileSize(tile) {
   const { tileW, tileH } = S.layout;
   tile.el.style.width = tileW + "px"; tile.el.style.height = tileH + "px";
   const len = tile.text.length;
-  const fontSize = len <= 2 ? tileH * 0.48 : Math.min(tileH * 0.44, (tileW - 12) / (len * 0.62));
+  // Reserve horizontal padding (~11px a side) so multi-letter word tiles don't
+  // run to the edge; single letters just scale to the tile height.
+  const fontSize = len <= 2 ? tileH * 0.48 : Math.min(tileH * 0.44, (tileW - 22) / (len * 0.6));
   tile.el.style.fontSize = Math.max(10, fontSize) + "px";
 }
 
