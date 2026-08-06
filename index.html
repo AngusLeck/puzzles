@@ -8,20 +8,20 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>">
 <style>
   :root{
-    /* warm natural stone: sandstone slabs on a weathered flagstone floor */
-    --bg:#d8cfbe; --card:#f3eee2; --ink:#332e25; --ink-soft:#72695a; --line:#c9bda4;
-    --stone-hi:#ece3d0; --stone-lo:#c2b393; --stone-ink:#3a3428; --stone-edge:rgba(74,58,30,.30);
-    --slot-bg:rgba(74,60,32,.13); --slot-edge:rgba(74,60,32,.32); --accent:#b0562f; --accent-ink:#fff;
+    /* white stone tiles set into an off-white sandstone board */
+    --bg:#e6dcc8; --card:#faf6ec; --ink:#3a352b; --ink-soft:#7a7161; --line:#d9ccb3;
+    --stone-hi:#ffffff; --stone-lo:#ece4d3; --stone-ink:#403a2f; --stone-edge:rgba(122,101,62,.22);
+    --slot-bg:rgba(96,78,44,.11); --slot-edge:rgba(96,78,44,.26); --accent:#b06a44; --accent-ink:#fff;
     --good:#3d8b4f; --glow:#f0b429;
     --cat-1:#f5c84c; --cat-2:#93c464; --cat-3:#7cb7e0; --cat-4:#b58fd9;
-    --board-1:#c8bda6; --board-2:#b3a68a;
+    --board:#e8dec9; --stone:#fbf8f0; --shadow:50,40,20;
   }
   @media (prefers-color-scheme: dark){
     :root{
-      --bg:#1f1c16; --card:#2b2720; --ink:#ece6d8; --ink-soft:#a19781; --line:#3a352b;
-      --stone-hi:#4c463a; --stone-lo:#2f2a21; --stone-ink:#ece6d6; --stone-edge:rgba(0,0,0,.5);
-      --slot-bg:rgba(255,248,230,.06); --slot-edge:rgba(255,248,230,.14); --accent:#d47f4c;
-      --board-1:#25211a; --board-2:#17140e;
+      --bg:#201d17; --card:#2a2620; --ink:#ece6d8; --ink-soft:#a49a86; --line:#39342a;
+      --stone-hi:#d9d0be; --stone-lo:#b3a992; --stone-ink:#2a2620; --stone-edge:rgba(0,0,0,.45);
+      --slot-bg:rgba(255,248,230,.05); --slot-edge:rgba(255,248,230,.13); --accent:#cf885a;
+      --board:#211d16; --stone:#cfc6b4; --shadow:0,0,0;
     }
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -57,16 +57,14 @@
   #puzzleView{position:fixed; inset:0;}
   #board{
     position:absolute; inset:0; overflow:hidden; touch-action:none;
-    background:
-      radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,.28), transparent 55%),
-      linear-gradient(160deg, var(--board-1), var(--board-2));
+    background:var(--board);
   }
-  #board::after{ /* faint granite grain over the whole board */
+  #board::after{ /* the faintest sandstone grain — keeps it stone, not flat plastic */
     content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E");
-    background-size:200px 200px; opacity:.05; mix-blend-mode:multiply;
+    background-size:220px 220px; opacity:.035; mix-blend-mode:multiply;
   }
-  @media (prefers-color-scheme: dark){ #board::after{ mix-blend-mode:soft-light; opacity:.07; } }
+  @media (prefers-color-scheme: dark){ #board::after{ mix-blend-mode:soft-light; opacity:.05; } }
   #board.shake{animation:boardShake .4s ease;}
   @keyframes boardShake{0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(3px)}}
   #rowBackdrops,#slotLayer,#tileLayer,#fxLayer{position:absolute; inset:0;}
@@ -76,9 +74,14 @@
   #tileLayer{z-index:10; pointer-events:none;} #slotLayer{z-index:2;} #rowBackdrops{z-index:1; pointer-events:none;}
 
   .slot{
-    position:absolute; border-radius:22%;
+    position:absolute; border-radius:19%;
     background:var(--slot-bg);
-    box-shadow:inset 0 2px 6px rgba(0,0,0,.16), inset 0 0 0 1.5px var(--slot-edge);
+    /* a pocket chiselled into the board: deep shadow up top, a lit lower lip,
+       and a faint highlight on the outer bottom edge where the surface breaks */
+    box-shadow:
+      inset 0 3px 7px rgba(0,0,0,.32), inset 0 7px 6px -5px rgba(0,0,0,.30),
+      inset 0 -2px 2px rgba(255,255,255,.16), inset 0 0 0 1px var(--slot-edge),
+      0 1px 0 rgba(255,255,255,.22);
     transition:box-shadow .15s ease, background .3s ease;
   }
   .slot .slotLabel{position:absolute; top:2px; left:5px; font-size:10px; font-weight:700; color:var(--ink-soft); opacity:.8; z-index:1;}
@@ -95,27 +98,25 @@
 
   .tile{
     position:absolute; top:0; left:0; display:grid; place-items:center;
-    background:linear-gradient(176deg, var(--stone-hi) 0%, var(--stone-lo) 100%);
+    background:var(--stone);
     color:var(--stone-ink); font-weight:800; letter-spacing:.02em; text-transform:uppercase;
-    border-radius:19%; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
+    border-radius:18%; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
     touch-action:none; cursor:grab; will-change:transform; pointer-events:auto;
     box-shadow:
-      inset 0 2px 1px rgba(255,255,255,.5), inset 0 -5px 7px rgba(60,44,20,.3),
-      inset 0 0 0 1px rgba(255,252,242,.14),
-      0 0 0 1px var(--stone-edge), 0 5px 3px -1px rgba(0,0,0,.22), 0 14px 22px -6px rgba(0,0,0,.52);
+      inset 0 1px 0 rgba(255,255,255,.7),
+      0 0 0 1px var(--stone-edge), 0 2px 4px rgba(var(--shadow),.13), 0 8px 16px -6px rgba(var(--shadow),.24);
   }
-  .tile::before{ /* granite grain */
+  .tile::before{ /* the faintest stone grain */
     content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size:150px 150px; opacity:.17; mix-blend-mode:multiply;
+    background-size:150px 150px; opacity:.08; mix-blend-mode:multiply;
   }
-  @media (prefers-color-scheme: dark){ .tile::before{ mix-blend-mode:soft-light; opacity:.22; } }
+  @media (prefers-color-scheme: dark){ .tile::before{ mix-blend-mode:soft-light; opacity:.14; } }
   .tile.lifted{
     cursor:grabbing;
     box-shadow:
-      inset 0 2px 1px rgba(255,255,255,.5), inset 0 -5px 7px rgba(60,44,20,.3),
-      inset 0 0 0 1px rgba(255,252,242,.14),
-      0 0 0 1px var(--stone-edge), 0 20px 16px -6px rgba(0,0,0,.26), 0 36px 48px -12px rgba(0,0,0,.55);
+      inset 0 1px 0 rgba(255,255,255,.7),
+      0 0 0 1px var(--stone-edge), 0 10px 14px -6px rgba(var(--shadow),.2), 0 26px 40px -12px rgba(var(--shadow),.32);
   }
   .tile.glow{box-shadow:0 0 0 3px var(--glow), 0 0 18px 3px color-mix(in srgb, var(--glow) 70%, transparent), 0 3px 3px rgba(0,0,0,.18);}
   .tile.locked{cursor:default;}
@@ -182,11 +183,11 @@
   }
   #bankKeys .key{
     width:32px; height:40px; border-radius:9px; font-weight:800; font-size:15px; color:var(--stone-ink);
-    background:linear-gradient(176deg, var(--stone-hi), var(--stone-lo));
-    box-shadow:inset 0 2px 0 rgba(255,255,255,.55), 0 0 0 1px var(--stone-edge), 0 3px 4px rgba(0,0,0,.2);
+    background:var(--stone);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.6), 0 0 0 1px var(--stone-edge), 0 2px 4px rgba(var(--shadow),.16);
     touch-action:manipulation;
   }
-  #bankKeys .key:active{transform:translateY(2px); box-shadow:inset 0 2px 0 rgba(255,255,255,.55), 0 0 0 1px var(--stone-edge), 0 1px 1px rgba(0,0,0,.2);}
+  #bankKeys .key:active{transform:translateY(2px); box-shadow:0 0 0 1px var(--stone-edge), 0 1px 1px rgba(var(--shadow),.16);}
 
   #trashZone{
     position:fixed; left:50%; bottom:calc(66px + env(safe-area-inset-bottom)); transform:translateX(-50%) scale(.5);
@@ -298,7 +299,7 @@ const Sound = (() => {
       if (!AC) return false;
       ctx = new AC();
       master = ctx.createGain(); master.gain.value = 0.85; master.connect(ctx.destination);
-      const len = Math.floor(ctx.sampleRate * 0.25);
+      const len = Math.floor(ctx.sampleRate * 1.0);   // long enough to loop for the grind without an obvious period
       noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
       const d = noiseBuf.getChannelData(0);
       for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
@@ -352,8 +353,41 @@ const Sound = (() => {
     [0, 1, 2, 3].forEach((i) => setTimeout(() => stone([720 + i * 230, 1300 + i * 280], 0.065, 0.48), i * 115));
   }
   function bad() { stone([130, 210], 0.14, 0.34, 0.03); setTimeout(() => stone([110, 180], 0.13, 0.28, 0.03), 75); }
-  function toggleMute() { muted = !muted; localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); return muted; }
-  return { ensure, pick, place, snap, remove, roll, solve, bad, toggleMute, isMuted: () => muted };
+
+  // Continuous "grinding" while a tile is dragged: looped noise split into a
+  // gritty low band and a sandy high band, its level driven by drag speed —
+  // fine sand ground between two stones.
+  let grind = null;
+  function grindStart() {
+    if (muted || !ensure() || grind) return;
+    const src = ctx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
+    const bus = ctx.createGain(); bus.gain.value = 0;
+    const lo = ctx.createBiquadFilter(); lo.type = "bandpass"; lo.frequency.value = 430; lo.Q.value = 1.0;
+    const loG = ctx.createGain(); loG.gain.value = 0.55;
+    const hi = ctx.createBiquadFilter(); hi.type = "bandpass"; hi.frequency.value = 3000; hi.Q.value = 0.6;
+    const hiG = ctx.createGain(); hiG.gain.value = 0.7;
+    src.connect(lo).connect(loG).connect(bus);
+    src.connect(hi).connect(hiG).connect(bus);
+    bus.connect(master); src.start();
+    grind = { src, bus, hi, level: 0 };
+  }
+  function grindUpdate(speed) {       // speed = px moved this frame
+    if (!grind) return;
+    const target = clamp(speed * 0.02, 0, 0.42);
+    grind.level += (target - grind.level) * 0.35;
+    const t = ctx.currentTime;
+    grind.bus.gain.setTargetAtTime(grind.level, t, 0.02);
+    grind.hi.frequency.setTargetAtTime(2400 + speed * 45, t, 0.03);
+  }
+  function grindStop() {
+    if (!grind) return;
+    const g = grind; grind = null;
+    g.bus.gain.setTargetAtTime(0, ctx.currentTime, 0.05);
+    setTimeout(() => { try { g.src.stop(); } catch {} }, 140);
+  }
+
+  function toggleMute() { muted = !muted; localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); if (muted) grindStop(); return muted; }
+  return { ensure, pick, place, snap, remove, roll, solve, bad, grindStart, grindUpdate, grindStop, toggleMute, isMuted: () => muted };
 })();
 
 function loadAllProgress() {
@@ -475,14 +509,11 @@ function layoutBoard() {
   const spanW = maxX * pitchX + tileW;
   const offsetX = Math.max(PAD, (boardW - spanW) / 2);
 
-  // Vertical: place the grid below the floating prompt panel.
-  const promptEl = el("promptPanel");
-  const topBarH = 54;
-  let topInset = topBarH + 14;
-  if (puzzle.prompt && !S.promptCollapsed) {
-    const r = promptEl.getBoundingClientRect();
-    topInset = Math.max(topInset, r.bottom + 12);
-  }
+  // Vertical: reserve room for the clue panel from its *content* height (not the
+  // live panel), so the grid never shifts when the clue is hidden or shown.
+  const promptTop = 58;   // ≈ #promptPanel top offset
+  const promptH = puzzle.prompt ? Math.min(el("promptText").scrollHeight, boardH * 0.34) : 0;
+  const topInset = promptTop + promptH + 16;
   const gridH = maxY * pitchY + tileH;
   const bankInset = puzzle.tileGenerator ? 58 : 12;
   const freeH = boardH - topInset - bankInset;
@@ -702,6 +733,15 @@ function tick(now) {
   }
   separateUnits(); clampUnits(); updateSlotTargets();
 
+  if (S.drag) {
+    const du = S.units.get(S.drag.unitId);
+    if (du) {
+      const dx = du.ax - (S.drag.lastAx ?? du.ax), dy = du.ay - (S.drag.lastAy ?? du.ay);
+      S.drag.lastAx = du.ax; S.drag.lastAy = du.ay;
+      Sound.grindUpdate(Math.hypot(dx, dy));
+    }
+  }
+
   for (const tile of S.tiles.values()) {
     let targetX, targetY, targetRot = 0, targetScale = tile.dying ? 0 : 1;
     const isDragged = S.drag && !tile.slotId && tile.unitId === S.drag.unitId;
@@ -754,7 +794,7 @@ function beginDrag(e, tile) {
   S.drag = { unitId: unit.id, pointerId: e.pointerId, dx: press.x - unit.ax, dy: press.y - unit.ay, removable, samples: [] };
   bringUnitToFront(unit);
   for (const tid of unit.tileIds) S.tiles.get(tid).el.classList.add("lifted");
-  Sound.pick();
+  Sound.pick(); Sound.grindStart();
   if (removable) el("trashZone").classList.add("show");
   deselectSlot();
 }
@@ -787,9 +827,10 @@ function onTilePointerUp(e, tile) {
 }
 
 function unliftUnit(u) { for (const tid of u.tileIds) S.tiles.get(tid)?.el.classList.remove("lifted"); }
-function abortDrag() { if (S.drag) { const u = S.units.get(S.drag.unitId); if (u) unliftUnit(u); } S.drag = null; S.pending = null; el("trashZone").classList.remove("show", "hot"); }
+function abortDrag() { Sound.grindStop(); if (S.drag) { const u = S.units.get(S.drag.unitId); if (u) unliftUnit(u); } S.drag = null; S.pending = null; el("trashZone").classList.remove("show", "hot"); }
 
 function endDrag() {
+  Sound.grindStop();
   const drag = S.drag, unit = S.units.get(drag.unitId);
   S.drag = null; S.pending = null; el("trashZone").classList.remove("show", "hot");
   if (!unit) return;
@@ -1206,7 +1247,7 @@ el("bankHandle").addEventListener("click", () => toggleBank());
 el("sheetScrim").addEventListener("click", closeSheet);
 el("hintToast").addEventListener("click", () => { hideToast(); clearHighlights(); });
 el("muteBtn").addEventListener("click", () => { const m = Sound.toggleMute(); el("muteBtn").textContent = m ? "🔇" : "🔊"; if (!m) { Sound.ensure(); Sound.snap(); } });
-el("promptToggle").addEventListener("click", () => { S.promptCollapsed = !S.promptCollapsed; el("promptPanel").classList.toggle("collapsed", S.promptCollapsed); layoutBoard(); });
+el("promptToggle").addEventListener("click", () => { S.promptCollapsed = !S.promptCollapsed; el("promptPanel").classList.toggle("collapsed", S.promptCollapsed); });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closeSheet(); hideToast(); } });
 
 const resetButton = el("resetBtn");
