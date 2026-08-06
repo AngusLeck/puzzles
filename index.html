@@ -715,9 +715,10 @@ function separateUnits() {
         const penY = Math.min(ra.y + ra.h, rb.y + rb.h) - Math.max(ra.y, rb.y) + 1.5;
         if (penX <= 0 || penY <= 0) continue;
         const aDragged = a.id === draggedId, bDragged = b.id === draggedId;
-        // The dragged tile takes most of the displacement and only slowly shoves a
-        // heavy neighbour aside; two loose tiles share evenly.
-        const YIELD = 0.9;
+        // The dragged tile takes nearly all the displacement — a heavy neighbour
+        // only creeps, so shoving takes real, sustained effort. Two loose tiles
+        // share evenly.
+        const YIELD = 0.965;
         const aShare = aDragged ? YIELD : (bDragged ? 1 - YIELD : 0.5);
         const bShare = 1 - aShare;
         if (penX < penY) {
@@ -1107,8 +1108,11 @@ function spawnLetterTile(letter, pos) {
   const tile = createTile(id, letter, true);
   let x, y;
   if (pos) {
-    x = clamp(pos.x - tileW / 2, 4, boardW - tileW - 4);
-    y = clamp(pos.y - tileH / 2, 4, boardH - tileH - 4);
+    // Scatter within a small disc around the pointer so repeated letters cluster
+    // into a little pile rather than stacking into a vertical column.
+    const ang = Math.random() * Math.PI * 2, rad = Math.random() * tileW * 0.5;
+    x = clamp(pos.x - tileW / 2 + Math.cos(ang) * rad, 4, boardW - tileW - 4);
+    y = clamp(pos.y - tileH / 2 + Math.sin(ang) * rad, 4, boardH - tileH - 4);
   } else {
     x = boardW / 2 - tileW / 2 + (Math.random() - 0.5) * boardW * 0.4;
     const top = Math.max(scatterTop, boardH * 0.4);
