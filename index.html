@@ -312,7 +312,11 @@ const Sound = (() => {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return false;
       ctx = new AC();
-      master = ctx.createGain(); master.gain.value = 0.85; master.connect(ctx.destination);
+      master = ctx.createGain(); master.gain.value = 0.85;
+      const limiter = ctx.createDynamicsCompressor();   // safety ceiling for the louder clacks
+      limiter.threshold.value = -2; limiter.knee.value = 0; limiter.ratio.value = 14;
+      limiter.attack.value = 0.002; limiter.release.value = 0.12;
+      master.connect(limiter); limiter.connect(ctx.destination);
       const len = Math.floor(ctx.sampleRate * 1.0);   // long enough to loop for the grind without an obvious period
       noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
       const d = noiseBuf.getChannelData(0);
@@ -346,10 +350,10 @@ const Sound = (() => {
     bus.connect(env).connect(master);
     src.start(t); src.stop(t + decay + 0.03);
   }
-  function pick()   { stone([320, 560], 0.08, 0.82, 0.02); }
-  function place()  { stone([760, 1250, 2050], 0.055, 1.3); }
-  function snap()   { stone([1050, 1750, 2700], 0.05, 1.45); }
-  function remove() { stone([210, 340, 480], 0.13, 1.1, 0.03); }
+  function pick()   { stone([320, 560], 0.08, 1.1, 0.02); }
+  function place()  { stone([760, 1250, 2050], 0.055, 1.7); }
+  function snap()   { stone([1050, 1750, 2700], 0.05, 1.9); }
+  function remove() { stone([210, 340, 480], 0.13, 1.45, 0.03); }
   function roll(open) {
     if (muted || !ensure()) return;
     const t = ctx.currentTime;
@@ -364,10 +368,10 @@ const Sound = (() => {
   }
   function solve() {
     if (muted) return;
-    [0, 1, 2, 3].forEach((i) => setTimeout(() => stone([720 + i * 230, 1300 + i * 280], 0.065, 1.2), i * 115));
+    [0, 1, 2, 3].forEach((i) => setTimeout(() => stone([720 + i * 230, 1300 + i * 280], 0.065, 1.5), i * 115));
   }
-  function bad() { stone([180, 300], 0.14, 0.85, 0.03); setTimeout(() => stone([150, 240], 0.13, 0.7, 0.03), 75); }
-  function drop()  { stone([230, 380, 560], 0.11, 1.0, 0.04); }   // dull thud of a slab set down
+  function bad() { stone([180, 300], 0.14, 1.05, 0.03); setTimeout(() => stone([150, 240], 0.13, 0.85, 0.03), 75); }
+  function drop()  { stone([230, 380, 560], 0.11, 1.35, 0.04); }   // dull thud of a slab set down
 
   // Continuous "grinding" while a tile is dragged: looped noise split into a
   // gritty low band and a sandy high band, its level driven by drag speed —
@@ -391,8 +395,8 @@ const Sound = (() => {
   function grindUpdate(speed, contact) {   // speed = px this frame; contact = touching other tiles
     if (!grind) return;
     const t = ctx.currentTime;
-    const hiTarget = clamp(speed * 0.0007, 0, 0.006);            // across the board: barely there
-    const loTarget = contact ? clamp(speed * 0.016, 0, 0.24) : 0; // against tiles: deeper and clearly audible
+    const hiTarget = clamp(speed * 0.0004, 0, 0.0035);           // across the board: barely there
+    const loTarget = contact ? clamp(speed * 0.009, 0, 0.12) : 0; // against tiles: present but well under the clacks
     grind.hiLevel += (hiTarget - grind.hiLevel) * 0.35;
     grind.loLevel += (loTarget - grind.loLevel) * 0.35;
     grind.hiBus.gain.setTargetAtTime(grind.hiLevel, t, 0.02);
