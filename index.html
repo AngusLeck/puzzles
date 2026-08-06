@@ -404,8 +404,10 @@ function layoutBoard() {
   const { maxX, maxY } = slotGridExtents();
   const cols = maxX + 1;
 
-  let tileH = ((boardW - 2 * PAD + gap) / cols - gap) / aspect;
-  tileH = clamp(tileH, 30, 58);
+  // Width-filling size for this column count; never clamp *up* past the fit
+  // (that would overflow wide grids like crosswords), only cap the max.
+  const fitH = ((boardW - 2 * PAD + gap) / cols - gap) / aspect;
+  const tileH = clamp(fitH, Math.min(30, fitH), 58);
   const tileW = tileH * aspect;
   const pitchX = tileW + gap, pitchY = tileH + gap;
   const spanW = maxX * pitchX + tileW;
@@ -1037,6 +1039,7 @@ function evaluateChecks() {
   const checks = S.puzzle.checks || [];
   if (!checks.length) return false;
   return checks.every((check) => {
+    if (check.type === "any") return true;  // solved once every slot is filled, whatever the tiles
     if (check.type === "slots") {
       return Object.entries(check.answers).every(([slotId, accepted]) => {
         const text = tileTextInSlot(slotId);

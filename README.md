@@ -61,13 +61,17 @@ Player progress (solves, hints revealed, board state) is kept in
       "categories": [
         { "label": "Shades of blue", "tiles": ["NAVY", "SKY"] }
       ]
-    }
-  ],
+    },
+    { "type": "any" }            // passes as soon as every slot is filled, whatever
+  ],                             //   the tiles (for open-ended / joke puzzles)
 
   // --- hints, grouped by size; players reveal them in file order per size ---
+  //     each distinct `size` becomes its own reveal button. A good Minute-Cryptic-
+  //     style ladder is "definition" → "wordplay" → "full parse", plus a "bonus"
+  //     size for a "try this variation of the same clue" nudge.
   "hints": [
     {
-      "size": "small",           // any label: "small" / "big" / "nudge" / ...
+      "size": "definition",      // any label: "small" / "definition" / "bonus" / ...
       "text": "Shown to the player.",
       "highlight": {             // all optional
         "prompt": ["scattered"], // substrings of the prompt to mark
@@ -82,6 +86,11 @@ Player progress (solves, hints revealed, board state) is kept in
 Checks compose: a puzzle can mix `slots` and `categories` checks (or gain new
 check types later) without the engine knowing anything about "crosswords" or
 "connections".
+
+**Crosswords** are just a `slots` puzzle where words share cells: give the two
+crossing words a single slot at the intersection (one id, one letter) and both
+"words" are satisfied by that one tile. Number the starting cells with `label`.
+See the `carpenter-crossword` puzzle: one 10-letter Down crossing two Acrosses.
 
 ## Interactions
 
