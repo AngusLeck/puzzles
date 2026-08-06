@@ -1206,7 +1206,35 @@ function maybeCheckSolution(options = {}) {
   else if (!options.quiet) {
     const board = el("board"); board.classList.remove("shake"); void board.offsetWidth; board.classList.add("shake");
     Sound.bad();
+    shakeLooseWrongTiles();
   }
+}
+
+// On a wrong answer, jostle the incorrect tiles a little way out of their slots
+// (only for exact-letter "slots" checks, where a wrong tile is well-defined).
+function shakeLooseWrongTiles() {
+  const wrong = [];
+  for (const check of S.puzzle.checks || []) {
+    if (check.type !== "slots") continue;
+    for (const [slotId, accepted] of Object.entries(check.answers)) {
+      const slot = S.slots.get(slotId);
+      if (!slot || !slot.tileId) continue;
+      const tile = S.tiles.get(slot.tileId);
+      const list = Array.isArray(accepted) ? accepted : [accepted];
+      if (!list.some((a) => String(a).toUpperCase() === tile.text.toUpperCase())) wrong.push(tile);
+    }
+  }
+  if (!wrong.length) return;
+  for (const tile of wrong) {
+    const slot = S.slots.get(tile.slotId);
+    if (slot) slot.tileId = null;
+    tile.slotId = null;
+    tile.rot = (Math.random() - 0.5) * 12;
+    const unit = createUnit([tile.id], tile.x + (Math.random() - 0.5) * 14, tile.y + S.layout.tileH * 0.35 + Math.random() * 6);
+    unit.vx = (Math.random() - 0.5) * 4; unit.vy = 1.5 + Math.random() * 2;   // a small jolt
+    bringUnitToFront(unit);
+  }
+  S.lastCheckSignature = null; updateSelectionUI(); saveBoard();
 }
 
 function onSolved(celebrate) {
