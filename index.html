@@ -3,24 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="theme-color" content="#e9e2d3">
+<meta name="theme-color" content="#cfcdc7">
 <title>Puzzles</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>">
 <style>
   :root{
-    --bg:#efe8db; --card:#fffdf8; --ink:#2b2a33; --ink-soft:#6f6a5e; --line:#e0d8c6;
-    --stone-hi:#f7f2e7; --stone-lo:#d9cdb2; --stone-ink:#33302a; --stone-edge:rgba(70,58,30,.22);
-    --slot-bg:rgba(60,52,34,.10); --slot-edge:rgba(70,60,38,.30); --accent:#b3552e; --accent-ink:#fff;
+    /* granite: cool speckled greys with a restrained slate accent */
+    --bg:#d5d3ce; --card:#f0efeb; --ink:#2a2b2e; --ink-soft:#6a6c70; --line:#c1bfb9;
+    --stone-hi:#eceae6; --stone-lo:#b4b2ac; --stone-ink:#2c2d31; --stone-edge:rgba(40,41,47,.26);
+    --slot-bg:rgba(40,42,48,.12); --slot-edge:rgba(40,42,48,.32); --accent:#4f7186; --accent-ink:#fff;
     --good:#3d8b4f; --glow:#f0b429;
     --cat-1:#f5c84c; --cat-2:#93c464; --cat-3:#7cb7e0; --cat-4:#b58fd9;
-    --board-1:#efe8da; --board-2:#e3dac8;
+    --board-1:#ceccc6; --board-2:#bab8b2;
   }
   @media (prefers-color-scheme: dark){
     :root{
-      --bg:#14151a; --card:#20222a; --ink:#e9e6dd; --ink-soft:#a09a8c; --line:#2e3038;
-      --stone-hi:#3a3c46; --stone-lo:#23252c; --stone-ink:#e9e4d6; --stone-edge:rgba(0,0,0,.5);
-      --slot-bg:rgba(255,255,255,.05); --slot-edge:rgba(255,255,255,.14); --accent:#d97a4e;
-      --board-1:#191b21; --board-2:#111217;
+      --bg:#1a1b1e; --card:#25272b; --ink:#e6e5e1; --ink-soft:#9a9b9e; --line:#33353a;
+      --stone-hi:#45474d; --stone-lo:#2a2c31; --stone-ink:#e7e4dc; --stone-edge:rgba(0,0,0,.5);
+      --slot-bg:rgba(255,255,255,.06); --slot-edge:rgba(255,255,255,.15); --accent:#7ba3bf;
+      --board-1:#1f2125; --board-2:#141518;
     }
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -57,9 +58,15 @@
   #board{
     position:absolute; inset:0; overflow:hidden; touch-action:none;
     background:
-      radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,.35), transparent 55%),
+      radial-gradient(120% 80% at 50% -10%, rgba(255,255,255,.28), transparent 55%),
       linear-gradient(160deg, var(--board-1), var(--board-2));
   }
+  #board::after{ /* faint granite grain over the whole board */
+    content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E");
+    background-size:200px 200px; opacity:.05; mix-blend-mode:multiply;
+  }
+  @media (prefers-color-scheme: dark){ #board::after{ mix-blend-mode:soft-light; opacity:.07; } }
   #board.shake{animation:boardShake .4s ease;}
   @keyframes boardShake{0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(3px)}}
   #rowBackdrops,#slotLayer,#tileLayer,#fxLayer{position:absolute; inset:0;}
@@ -96,12 +103,12 @@
       inset 0 2px 0 rgba(255,255,255,.6), inset 0 -3px 4px rgba(90,72,34,.22),
       0 0 0 1px var(--stone-edge), 0 3px 3px rgba(0,0,0,.18), 0 9px 16px -6px rgba(0,0,0,.42);
   }
-  .tile::before{ /* faint stone speckle */
-    content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none; opacity:.5;
-    background:radial-gradient(1px 1px at 30% 40%, rgba(90,70,30,.12), transparent 60%),
-      radial-gradient(1.5px 1.5px at 70% 65%, rgba(90,70,30,.10), transparent 60%),
-      radial-gradient(1px 1px at 55% 25%, rgba(90,70,30,.10), transparent 60%);
+  .tile::before{ /* granite grain */
+    content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:150px 150px; opacity:.13; mix-blend-mode:multiply;
   }
+  @media (prefers-color-scheme: dark){ .tile::before{ mix-blend-mode:soft-light; opacity:.2; } }
   .tile.lifted{
     cursor:grabbing;
     box-shadow:
@@ -288,8 +295,8 @@ const Sound = (() => {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return false;
       ctx = new AC();
-      master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
-      const len = Math.floor(ctx.sampleRate * 0.3);
+      master = ctx.createGain(); master.gain.value = 0.55; master.connect(ctx.destination);
+      const len = Math.floor(ctx.sampleRate * 0.25);
       noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
       const d = noiseBuf.getChannelData(0);
       for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
@@ -297,61 +304,52 @@ const Sound = (() => {
     if (ctx.state === "suspended") ctx.resume();
     return true;
   }
-  // A short stone "clack": a filtered noise transient plus a low pitched body.
-  function clack(pitch, vol) {
+  // Modal "struck stone": a brief noise impulse rings a few damped resonant
+  // filters. No oscillators, so it reads as tapping granite, not a synth tone.
+  function stone(freqs, decay, vol, exciteDecay) {
     if (muted || !ensure()) return;
     const t = ctx.currentTime;
     const src = ctx.createBufferSource(); src.buffer = noiseBuf;
-    const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1700 * pitch; bp.Q.value = 1.3;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(vol, t + 0.004);
-    g.gain.exponentialRampToValueAtTime(0.0007, t + 0.085);
-    src.connect(bp).connect(g).connect(master); src.start(t); src.stop(t + 0.1);
-    const o = ctx.createOscillator(); o.type = "triangle";
-    o.frequency.setValueAtTime(250 * pitch, t);
-    o.frequency.exponentialRampToValueAtTime(105 * pitch, t + 0.07);
-    const g2 = ctx.createGain();
-    g2.gain.setValueAtTime(vol * 0.9, t);
-    g2.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
-    o.connect(g2).connect(master); o.start(t); o.stop(t + 0.13);
+    const exc = ctx.createGain();               // very short impulse that excites the modes
+    exc.gain.setValueAtTime(1, t);
+    exc.gain.exponentialRampToValueAtTime(0.001, t + (exciteDecay || 0.006));
+    src.connect(exc);
+    const bus = ctx.createGain(); bus.gain.value = vol;
+    freqs.forEach((f, i) => {
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.value = f * (0.96 + Math.random() * 0.08);   // slight per-hit variation
+      bp.Q.value = 9 + Math.random() * 7;
+      const ring = ctx.createGain(); ring.gain.value = 1 / (i + 1.25);
+      exc.connect(bp).connect(ring).connect(bus);
+    });
+    const env = ctx.createGain();               // overall damping — granite is short
+    env.gain.setValueAtTime(1, t);
+    env.gain.exponentialRampToValueAtTime(0.001, t + decay);
+    bus.connect(env).connect(master);
+    src.start(t); src.stop(t + decay + 0.03);
   }
-  function pick()  { clack(0.7, 0.24); }
-  function place() { clack(1.0 + Math.random() * 0.12, 0.5); }
-  function snap()  { clack(1.18 + Math.random() * 0.1, 0.42); }
-  function remove() {
-    if (muted || !ensure()) return;
-    const t = ctx.currentTime;
-    const o = ctx.createOscillator(); o.type = "sawtooth";
-    o.frequency.setValueAtTime(320, t); o.frequency.exponentialRampToValueAtTime(70, t + 0.2);
-    const g = ctx.createGain(); g.gain.setValueAtTime(0.28, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
-    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 900;
-    o.connect(lp).connect(g).connect(master); o.start(t); o.stop(t + 0.24);
-  }
+  function pick()   { stone([300, 540], 0.075, 0.16, 0.02); }
+  function place()  { stone([760, 1250, 2050], 0.05, 0.2); }
+  function snap()   { stone([1050, 1750, 2700], 0.045, 0.22); }
+  function remove() { stone([170, 290, 420], 0.12, 0.18, 0.03); }
   function roll(open) {
     if (muted || !ensure()) return;
     const t = ctx.currentTime;
     const src = ctx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
     const lp = ctx.createBiquadFilter(); lp.type = "lowpass";
-    lp.frequency.setValueAtTime(open ? 350 : 1300, t);
-    lp.frequency.exponentialRampToValueAtTime(open ? 1500 : 300, t + 0.28);
+    lp.frequency.setValueAtTime(open ? 240 : 620, t);
+    lp.frequency.linearRampToValueAtTime(open ? 620 : 240, t + 0.26);
     const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.16, t + 0.04);
-    g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-    src.connect(lp).connect(g).connect(master); src.start(t); src.stop(t + 0.32);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.09, t + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+    src.connect(lp).connect(g).connect(master); src.start(t); src.stop(t + 0.3);
   }
   function solve() {
     if (muted) return;
-    [0, 1, 2, 3, 4].forEach((i) => setTimeout(() => clack(1 + 0.16 * i, 0.5), i * 95));
+    [0, 1, 2, 3].forEach((i) => setTimeout(() => stone([720 + i * 230, 1300 + i * 280], 0.06, 0.19), i * 115));
   }
-  function bad() {
-    if (muted || !ensure()) return;
-    const t = ctx.currentTime;
-    const o = ctx.createOscillator(); o.type = "square"; o.frequency.setValueAtTime(140, t);
-    o.frequency.exponentialRampToValueAtTime(70, t + 0.18);
-    const g = ctx.createGain(); g.gain.setValueAtTime(0.14, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-    o.connect(g).connect(master); o.start(t); o.stop(t + 0.22);
-  }
+  function bad() { stone([130, 210], 0.13, 0.16, 0.03); setTimeout(() => stone([110, 180], 0.12, 0.13, 0.03), 75); }
   function toggleMute() { muted = !muted; localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); return muted; }
   return { ensure, pick, place, snap, remove, roll, solve, bad, toggleMute, isMuted: () => muted };
 })();
