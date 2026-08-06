@@ -5,29 +5,6 @@
 // Attribution key: AD = default (unattributed), RAD / RD / AP / APD as marked.
 window.PUZZLES = [
 
-  // ---------------------------------------------------------------- warm-up
-  {
-    "id": "warmup-apple",
-    "title": "Warm-up: Unscramble",
-    "subtitle": "Get a feel for the tiles",
-    "prompt": "Unscramble LEPPA to find a fruit (5).",
-    "tileGenerator": { "type": "letters" },
-    "slots": [
-      { "id": "s1", "x": 0, "y": 0 },
-      { "id": "s2", "x": 1, "y": 0 },
-      { "id": "s3", "x": 2, "y": 0 },
-      { "id": "s4", "x": 3, "y": 0 },
-      { "id": "s5", "x": 4, "y": 0 }
-    ],
-    "checks": [
-      { "type": "slots", "answers": { "s1": "A", "s2": "P", "s3": "P", "s4": "L", "s5": "E" } }
-    ],
-    "hints": [
-      { "size": "small", "text": "One a day keeps the doctor away.", "highlight": { "prompt": ["fruit"] } },
-      { "size": "big", "text": "It starts with A and ends with E.", "highlight": { "slots": ["s1", "s5"] } }
-    ]
-  },
-
   // --------------------------------------------------------------- cryptics
   {
     "id": "cryptic-idiom",
@@ -319,26 +296,6 @@ window.PUZZLES = [
       { "size": "small", "text": "One word can precede \"bean\".", "highlight": { "tiles": ["KIDNEY"] } },
       { "size": "big", "text": "HEART and HEARTS are in different groups: one is an organ, the other a card game.", "highlight": { "tiles": ["HEART", "HEARTS"] } },
       { "size": "big", "text": "The card games are BRIDGE, SNAP, HEARTS and SPIT.", "highlight": { "tiles": ["BRIDGE", "SNAP", "HEARTS", "SPIT"] } }
-    ]
-  },
-
-  {
-    "id": "mini-cryptic-xmas",
-    "title": "Christmas Special",
-    "subtitle": "Unlocks on the day (release-date demo)",
-    "attribution": "AD",
-    "releaseDate": "2026-12-25",
-    "prompt": "ACROSS\n1. Devil dancing about, bringing presents (5)",
-    "tileGenerator": { "type": "letters" },
-    "slots": [
-      { "id": "x1", "x": 0, "y": 0, "label": "1" }, { "id": "x2", "x": 1, "y": 0 },
-      { "id": "x3", "x": 2, "y": 0 }, { "id": "x4", "x": 3, "y": 0 }, { "id": "x5", "x": 4, "y": 0 }
-    ],
-    "checks": [
-      { "type": "slots", "answers": { "x1": "S", "x2": "A", "x3": "N", "x4": "T", "x5": "A" } }
-    ],
-    "hints": [
-      { "size": "small", "text": "\"dancing about\" signals an anagram of DEVIL's other name.", "highlight": { "prompt": ["dancing about"] } }
     ]
   }
 ];
