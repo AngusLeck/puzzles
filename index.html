@@ -597,7 +597,7 @@ function buildSlots() {
     if (def.label != null) html += `<span class="slotLabel">${escapeHtml(String(def.label))}</span>`;
     if (def.centerLabel != null) html += `<span class="slotCenterLabel">${escapeHtml(String(def.centerLabel))}</span>`;
     slotEl.innerHTML = html;
-    slotEl.addEventListener("pointerdown", (e) => { if (S.lock) return; e.stopPropagation(); Sound.ensure(); selectSlot(S.slots.get(def.id)); });
+    slotEl.addEventListener("pointerdown", (e) => { if (S.lock || !S.puzzle.tileGenerator) return; e.stopPropagation(); Sound.ensure(); selectSlot(S.slots.get(def.id)); });
     el("slotLayer").appendChild(slotEl);
     S.slots.set(def.id, { id: def.id, def, el: slotEl, px: 0, py: 0, tileId: null });
   }
@@ -859,9 +859,12 @@ function onTilePointerMove(e, tile) {
 
 function onTilePointerUp(e, tile) {
   if (S.pending && S.pending.tile === tile && !S.drag) {
-    // A tap (not a drag): if the tile sits in a slot, select that slot.
-    if (tile.slotId) { Sound.ensure(); selectSlot(S.slots.get(tile.slotId)); }
-    else if (tile.unitId != null) { Sound.ensure(); selectUnit(tile.unitId); }
+    // A tap (not a drag): select for typing — only meaningful when letters can be
+    // added (a tile generator). Slotted tile -> its slot; loose tile -> its group.
+    if (S.puzzle.tileGenerator) {
+      if (tile.slotId) { Sound.ensure(); selectSlot(S.slots.get(tile.slotId)); }
+      else if (tile.unitId != null) { Sound.ensure(); selectUnit(tile.unitId); }
+    }
     S.pending = null; return;
   }
   if (!S.drag || S.drag.pointerId !== e.pointerId) return;
