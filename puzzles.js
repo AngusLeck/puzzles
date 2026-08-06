@@ -149,6 +149,7 @@ window.PUZZLES = [
     "id": "cryptic-ipad",
     "title": "Cryptic №8",
     "attribution": "AD",
+    "releaseDate": "2026-08-14",
     "prompt": "Tilting his head - dad eyed listening device. (4)",
     "tileGenerator": { "type": "letters" },
     "slots": [
