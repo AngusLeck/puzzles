@@ -97,12 +97,25 @@ See the `carpenter-crossword` puzzle: one 10-letter Down crossing two Acrosses.
 
 ## Interactions
 
-- Drag tiles into slots; nearby slots highlight while dragging.
-- Dropping a tile on an occupied slot swaps the old tile out.
-- With chaining on, tiles dropped side-by-side snap into a word that drags as
-  one piece; a chain dropped over a run of empty slots fills all of them.
-- Double-tap: pops a placed tile out of its slot / detaches a tile from a chain.
-- Generated tiles are deleted by dropping them on the ✕ that appears while
-  dragging.
+The whole screen is the play area — slots float in space and tiles can be
+dragged anywhere. Tiles are heavy: they lag behind the pointer, slide across
+each other with friction, keep a little momentum on release, and click into
+slots with a snap.
+
+- **Drag** tiles into slots; nearby slots highlight while dragging. Dropping on
+  an occupied slot swaps the old tile out.
+- **Chaining** (on by default when there's a `tileGenerator`): tiles dropped
+  side-by-side snap into a word that drags as one piece; a chain dropped over a
+  run of empty slots fills all of them.
+- **Double-tap**: pops a placed tile out of its slot / detaches a tile from a chain.
+- **Tile bank** (when a `tileGenerator` is present): roll the drawer up from the
+  bottom edge and tap letters to mint tiles.
+- **Select & type**: tap a slot to select it, then type — each letter drops a
+  tile straight into the slot and the selection advances along the linear run
+  (across or down). Tapping the same slot again toggles direction; arrows move
+  the selection; backspace clears and steps back. (Only when tiles can be added.)
+- Generated tiles are deleted by dropping them on the ✕ that appears while dragging.
+- **Sound**: synthesized stone clacks for pick-up / snap / place / remove / solve,
+  plus a roll for the bank. Toggle with the 🔊 button (persisted).
 - The puzzle auto-checks whenever every slot is filled: wrong shakes, right
   celebrates.
