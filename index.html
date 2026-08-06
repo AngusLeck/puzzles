@@ -8,20 +8,20 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧩</text></svg>">
 <style>
   :root{
-    /* granite: cool speckled greys with a restrained slate accent */
-    --bg:#d5d3ce; --card:#f0efeb; --ink:#2a2b2e; --ink-soft:#6a6c70; --line:#c1bfb9;
-    --stone-hi:#eceae6; --stone-lo:#b4b2ac; --stone-ink:#2c2d31; --stone-edge:rgba(40,41,47,.26);
-    --slot-bg:rgba(40,42,48,.12); --slot-edge:rgba(40,42,48,.32); --accent:#4f7186; --accent-ink:#fff;
+    /* warm natural stone: sandstone slabs on a weathered flagstone floor */
+    --bg:#d8cfbe; --card:#f3eee2; --ink:#332e25; --ink-soft:#72695a; --line:#c9bda4;
+    --stone-hi:#ece3d0; --stone-lo:#c2b393; --stone-ink:#3a3428; --stone-edge:rgba(74,58,30,.30);
+    --slot-bg:rgba(74,60,32,.13); --slot-edge:rgba(74,60,32,.32); --accent:#b0562f; --accent-ink:#fff;
     --good:#3d8b4f; --glow:#f0b429;
     --cat-1:#f5c84c; --cat-2:#93c464; --cat-3:#7cb7e0; --cat-4:#b58fd9;
-    --board-1:#ceccc6; --board-2:#bab8b2;
+    --board-1:#c8bda6; --board-2:#b3a68a;
   }
   @media (prefers-color-scheme: dark){
     :root{
-      --bg:#1a1b1e; --card:#25272b; --ink:#e6e5e1; --ink-soft:#9a9b9e; --line:#33353a;
-      --stone-hi:#45474d; --stone-lo:#2a2c31; --stone-ink:#e7e4dc; --stone-edge:rgba(0,0,0,.5);
-      --slot-bg:rgba(255,255,255,.06); --slot-edge:rgba(255,255,255,.15); --accent:#7ba3bf;
-      --board-1:#1f2125; --board-2:#141518;
+      --bg:#1f1c16; --card:#2b2720; --ink:#ece6d8; --ink-soft:#a19781; --line:#3a352b;
+      --stone-hi:#4c463a; --stone-lo:#2f2a21; --stone-ink:#ece6d6; --stone-edge:rgba(0,0,0,.5);
+      --slot-bg:rgba(255,248,230,.06); --slot-edge:rgba(255,248,230,.14); --accent:#d47f4c;
+      --board-1:#25211a; --board-2:#17140e;
     }
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
@@ -97,23 +97,25 @@
     position:absolute; top:0; left:0; display:grid; place-items:center;
     background:linear-gradient(176deg, var(--stone-hi) 0%, var(--stone-lo) 100%);
     color:var(--stone-ink); font-weight:800; letter-spacing:.02em; text-transform:uppercase;
-    border-radius:22%; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
+    border-radius:19%; user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
     touch-action:none; cursor:grab; will-change:transform; pointer-events:auto;
     box-shadow:
-      inset 0 2px 0 rgba(255,255,255,.6), inset 0 -3px 4px rgba(90,72,34,.22),
-      0 0 0 1px var(--stone-edge), 0 3px 3px rgba(0,0,0,.18), 0 9px 16px -6px rgba(0,0,0,.42);
+      inset 0 2px 1px rgba(255,255,255,.5), inset 0 -5px 7px rgba(60,44,20,.3),
+      inset 0 0 0 1px rgba(255,252,242,.14),
+      0 0 0 1px var(--stone-edge), 0 5px 3px -1px rgba(0,0,0,.22), 0 14px 22px -6px rgba(0,0,0,.52);
   }
   .tile::before{ /* granite grain */
     content:""; position:absolute; inset:0; border-radius:inherit; pointer-events:none;
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-size:150px 150px; opacity:.13; mix-blend-mode:multiply;
+    background-size:150px 150px; opacity:.17; mix-blend-mode:multiply;
   }
-  @media (prefers-color-scheme: dark){ .tile::before{ mix-blend-mode:soft-light; opacity:.2; } }
+  @media (prefers-color-scheme: dark){ .tile::before{ mix-blend-mode:soft-light; opacity:.22; } }
   .tile.lifted{
     cursor:grabbing;
     box-shadow:
-      inset 0 2px 0 rgba(255,255,255,.6), inset 0 -3px 4px rgba(90,72,34,.22),
-      0 0 0 1px var(--stone-edge), 0 14px 12px rgba(0,0,0,.22), 0 30px 40px -10px rgba(0,0,0,.5);
+      inset 0 2px 1px rgba(255,255,255,.5), inset 0 -5px 7px rgba(60,44,20,.3),
+      inset 0 0 0 1px rgba(255,252,242,.14),
+      0 0 0 1px var(--stone-edge), 0 20px 16px -6px rgba(0,0,0,.26), 0 36px 48px -12px rgba(0,0,0,.55);
   }
   .tile.glow{box-shadow:0 0 0 3px var(--glow), 0 0 18px 3px color-mix(in srgb, var(--glow) 70%, transparent), 0 3px 3px rgba(0,0,0,.18);}
   .tile.locked{cursor:default;}
@@ -295,7 +297,7 @@ const Sound = (() => {
       const AC = window.AudioContext || window.webkitAudioContext;
       if (!AC) return false;
       ctx = new AC();
-      master = ctx.createGain(); master.gain.value = 0.55; master.connect(ctx.destination);
+      master = ctx.createGain(); master.gain.value = 0.85; master.connect(ctx.destination);
       const len = Math.floor(ctx.sampleRate * 0.25);
       noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
       const d = noiseBuf.getChannelData(0);
@@ -329,10 +331,10 @@ const Sound = (() => {
     bus.connect(env).connect(master);
     src.start(t); src.stop(t + decay + 0.03);
   }
-  function pick()   { stone([300, 540], 0.075, 0.16, 0.02); }
-  function place()  { stone([760, 1250, 2050], 0.05, 0.2); }
-  function snap()   { stone([1050, 1750, 2700], 0.045, 0.22); }
-  function remove() { stone([170, 290, 420], 0.12, 0.18, 0.03); }
+  function pick()   { stone([300, 540], 0.08, 0.32, 0.02); }
+  function place()  { stone([760, 1250, 2050], 0.055, 0.5); }
+  function snap()   { stone([1050, 1750, 2700], 0.05, 0.55); }
+  function remove() { stone([170, 290, 420], 0.13, 0.42, 0.03); }
   function roll(open) {
     if (muted || !ensure()) return;
     const t = ctx.currentTime;
@@ -341,15 +343,15 @@ const Sound = (() => {
     lp.frequency.setValueAtTime(open ? 240 : 620, t);
     lp.frequency.linearRampToValueAtTime(open ? 620 : 240, t + 0.26);
     const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.09, t + 0.05);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.16, t + 0.05);
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
     src.connect(lp).connect(g).connect(master); src.start(t); src.stop(t + 0.3);
   }
   function solve() {
     if (muted) return;
-    [0, 1, 2, 3].forEach((i) => setTimeout(() => stone([720 + i * 230, 1300 + i * 280], 0.06, 0.19), i * 115));
+    [0, 1, 2, 3].forEach((i) => setTimeout(() => stone([720 + i * 230, 1300 + i * 280], 0.065, 0.48), i * 115));
   }
-  function bad() { stone([130, 210], 0.13, 0.16, 0.03); setTimeout(() => stone([110, 180], 0.12, 0.13, 0.03), 75); }
+  function bad() { stone([130, 210], 0.14, 0.34, 0.03); setTimeout(() => stone([110, 180], 0.13, 0.28, 0.03), 75); }
   function toggleMute() { muted = !muted; localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); return muted; }
   return { ensure, pick, place, snap, remove, roll, solve, bad, toggleMute, isMuted: () => muted };
 })();
@@ -693,9 +695,9 @@ function tick(now) {
   for (const u of S.units.values()) {
     if (u.vx || u.vy) {
       u.ax += u.vx; u.ay += u.vy;
-      u.vx *= 0.9; u.vy *= 0.9;              // friction
-      if (Math.abs(u.vx) < 0.12) u.vx = 0;
-      if (Math.abs(u.vy) < 0.12) u.vy = 0;
+      u.vx *= 0.8; u.vy *= 0.8;              // heavy friction — slabs don't skid
+      if (Math.abs(u.vx) < 0.3) u.vx = 0;
+      if (Math.abs(u.vy) < 0.3) u.vy = 0;
     }
   }
   separateUnits(); clampUnits(); updateSlotTargets();
@@ -796,11 +798,12 @@ function endDrag() {
   const mapping = computeSlotMapping(unit);
   if (mapping) { placeMapping(unit, mapping); }
   else if (!tryMergeChains(unit)) {
+    // A heavy slab only glides if you give it a genuine flick, and not far.
     const s = drag.samples;
-    if (s.length >= 2 && performance.now() - s[s.length - 1].t < 90) {
+    if (s.length >= 2 && performance.now() - s[s.length - 1].t < 70) {
       const first = s[0], last = s[s.length - 1], dt = Math.max(1, last.t - first.t);
-      unit.vx = clamp(((last.x - first.x) / dt) * 12, -18, 18);
-      unit.vy = clamp(((last.y - first.y) / dt) * 12, -18, 18);
+      const vx = (last.x - first.x) / dt, vy = (last.y - first.y) / dt;
+      if (Math.hypot(vx, vy) > 0.9) { unit.vx = clamp(vx * 5, -8, 8); unit.vy = clamp(vy * 5, -8, 8); }
     }
   }
   saveBoard(); maybeCheckSolution();
