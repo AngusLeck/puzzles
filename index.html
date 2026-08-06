@@ -343,10 +343,10 @@ const Sound = (() => {
     bus.connect(env).connect(master);
     src.start(t); src.stop(t + decay + 0.03);
   }
-  function pick()   { stone([300, 540], 0.08, 0.42, 0.02); }
-  function place()  { stone([760, 1250, 2050], 0.055, 0.66); }
-  function snap()   { stone([1050, 1750, 2700], 0.05, 0.72); }
-  function remove() { stone([170, 290, 420], 0.13, 0.56, 0.03); }
+  function pick()   { stone([320, 560], 0.08, 0.6, 0.02); }
+  function place()  { stone([760, 1250, 2050], 0.055, 0.95); }
+  function snap()   { stone([1050, 1750, 2700], 0.05, 1.05); }
+  function remove() { stone([210, 340, 480], 0.13, 0.8, 0.03); }
   function roll(open) {
     if (muted || !ensure()) return;
     const t = ctx.currentTime;
@@ -361,9 +361,9 @@ const Sound = (() => {
   }
   function solve() {
     if (muted) return;
-    [0, 1, 2, 3].forEach((i) => setTimeout(() => stone([720 + i * 230, 1300 + i * 280], 0.065, 0.62), i * 115));
+    [0, 1, 2, 3].forEach((i) => setTimeout(() => stone([720 + i * 230, 1300 + i * 280], 0.065, 0.9), i * 115));
   }
-  function bad() { stone([130, 210], 0.14, 0.44, 0.03); setTimeout(() => stone([110, 180], 0.13, 0.36, 0.03), 75); }
+  function bad() { stone([180, 300], 0.14, 0.6, 0.03); setTimeout(() => stone([150, 240], 0.13, 0.5, 0.03), 75); }
 
   // Continuous "grinding" while a tile is dragged: looped noise split into a
   // gritty low band and a sandy high band, its level driven by drag speed —
@@ -373,10 +373,11 @@ const Sound = (() => {
     if (muted || !ensure() || grind) return;
     const src = ctx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
     // board hiss: a light sandy high band, kept very quiet
-    const hi = ctx.createBiquadFilter(); hi.type = "bandpass"; hi.frequency.value = 3200; hi.Q.value = 0.6;
+    const hi = ctx.createBiquadFilter(); hi.type = "bandpass"; hi.frequency.value = 3400; hi.Q.value = 0.6;
     const hiBus = ctx.createGain(); hiBus.gain.value = 0;
-    // contact grind: a deeper low band, only heard when sliding against tiles
-    const lo = ctx.createBiquadFilter(); lo.type = "bandpass"; lo.frequency.value = 250; lo.Q.value = 1.1;
+    // contact grind: a deeper mid band (kept audible on phone speakers, which
+    // roll off the low end) — heard when sliding against other tiles
+    const lo = ctx.createBiquadFilter(); lo.type = "bandpass"; lo.frequency.value = 700; lo.Q.value = 1.2;
     const loBus = ctx.createGain(); loBus.gain.value = 0;
     src.connect(hi).connect(hiBus).connect(master);
     src.connect(lo).connect(loBus).connect(master);
@@ -386,13 +387,13 @@ const Sound = (() => {
   function grindUpdate(speed, contact) {   // speed = px this frame; contact = touching other tiles
     if (!grind) return;
     const t = ctx.currentTime;
-    const hiTarget = clamp(speed * 0.004, 0, 0.045);              // across the board: very subtle
-    const loTarget = contact ? clamp(speed * 0.011, 0, 0.16) : 0; // against tiles: deeper, a bit louder
+    const hiTarget = clamp(speed * 0.0016, 0, 0.016);            // across the board: barely there
+    const loTarget = contact ? clamp(speed * 0.022, 0, 0.34) : 0; // against tiles: deeper and clearly audible
     grind.hiLevel += (hiTarget - grind.hiLevel) * 0.35;
     grind.loLevel += (loTarget - grind.loLevel) * 0.35;
     grind.hiBus.gain.setTargetAtTime(grind.hiLevel, t, 0.02);
     grind.loBus.gain.setTargetAtTime(grind.loLevel, t, 0.03);
-    grind.hi.frequency.setTargetAtTime(2600 + speed * 40, t, 0.03);
+    grind.hi.frequency.setTargetAtTime(3200 + speed * 40, t, 0.03);
   }
   function grindStop() {
     if (!grind) return;
@@ -760,7 +761,7 @@ function tick(now) {
         if (other.dying || other.unitId === du.id) continue;
         const ox = Math.min(du.ax + rw, other.x + L.tileW) - Math.max(du.ax, other.x);
         const oy = Math.min(du.ay + L.tileH, other.y + L.tileH) - Math.max(du.ay, other.y);
-        if (ox > -2 && oy > -2) { contact = true; break; }
+        if (ox > -4 && oy > -4) { contact = true; break; }
       }
       Sound.grindUpdate(Math.hypot(dx, dy), contact);
     }
