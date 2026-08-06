@@ -363,9 +363,9 @@ const Sound = (() => {
     const src = ctx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
     const bus = ctx.createGain(); bus.gain.value = 0;
     const lo = ctx.createBiquadFilter(); lo.type = "bandpass"; lo.frequency.value = 430; lo.Q.value = 1.0;
-    const loG = ctx.createGain(); loG.gain.value = 0.55;
+    const loG = ctx.createGain(); loG.gain.value = 0.42;
     const hi = ctx.createBiquadFilter(); hi.type = "bandpass"; hi.frequency.value = 3000; hi.Q.value = 0.6;
-    const hiG = ctx.createGain(); hiG.gain.value = 0.7;
+    const hiG = ctx.createGain(); hiG.gain.value = 0.5;
     src.connect(lo).connect(loG).connect(bus);
     src.connect(hi).connect(hiG).connect(bus);
     bus.connect(master); src.start();
@@ -373,7 +373,7 @@ const Sound = (() => {
   }
   function grindUpdate(speed) {       // speed = px moved this frame
     if (!grind) return;
-    const target = clamp(speed * 0.02, 0, 0.42);
+    const target = clamp(speed * 0.007, 0, 0.13);
     grind.level += (target - grind.level) * 0.35;
     const t = ctx.currentTime;
     grind.bus.gain.setTargetAtTime(grind.level, t, 0.02);
