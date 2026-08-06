@@ -1,0 +1,94 @@
+# Puzzles
+
+A standalone tile-and-slot puzzle page. No build step, no dependencies — open
+`index.html` in a browser, or host the folder on GitHub Pages.
+
+Every puzzle is the same generic shape: a **prompt**, some **slots** arranged on
+a grid, and **tiles** to fill them with (either a fixed set, or a letter
+generator the player controls). Different puzzle types — cryptic crosswords,
+connections, unscrambles — are just different compositions of those pieces.
+
+## Files
+
+- `index.html` — the whole app (UI, drag/snap engine, hints, storage).
+- `puzzles.js` — the puzzle data, edited by hand. It assigns a JSON array to
+  `window.PUZZLES`. (It's a `.js` wrapper around JSON only so the page also
+  works from `file://`, where fetching a `.json` file is blocked.)
+
+Player progress (solves, hints revealed, board state) is kept in
+`localStorage` under `puzzles-progress-v1`.
+
+## Puzzle schema
+
+```jsonc
+{
+  "id": "mini-cryptic-1",        // required, unique, stable (progress is keyed on it)
+  "title": "Mini Cryptic №1",    // shown in the list and puzzle header
+  "subtitle": "optional blurb",  // shown on the list card
+  "releaseDate": "2026-12-25",   // optional; puzzle is hidden until this local date
+  "attribution": "RAD",          // optional author credit (list badge + "— RAD" under the prompt)
+  "prompt": "ACROSS\n1. ...",    // plain text, newlines respected
+
+  // --- tiles: provide one (or both) of these ---
+  "tiles": [                     // fixed tiles the puzzle starts with
+    { "id": "t01", "text": "NAVY" }
+  ],
+  "tileGenerator": {             // lets the player mint/remove letter tiles
+    "type": "letters",           // shows an A–Z strip (desktop: also type; backspace removes)
+    "letters": "AEIOU"           // optional subset; defaults to A–Z
+  },
+
+  // --- slots: positions are grid units, fractions allowed (for row gaps) ---
+  "slots": [
+    { "id": "c1", "x": 0, "y": 0, "label": "1" }   // label = small corner number
+  ],
+  "slotGap": 8,                  // optional px between slots (default 8)
+  "tileAspect": 2.4,             // optional width/height ratio (word tiles; default 1)
+  "chainTiles": false,           // optional; tiles snapping side-by-side into draggable
+                                 // words defaults to ON when there's a tileGenerator
+
+  // --- checks: solved when ALL checks pass and every slot is filled ---
+  "checks": [
+    { "type": "slots",           // exact tile text per slot (case-insensitive;
+      "answers": {               //  value may be a string or an array of accepted strings)
+        "c1": "C", "c2": ["A", "Á"]
+      }
+    },
+    { "type": "categories",      // each slot group must hold exactly one full
+      "slotGroups": [["r1c1", "r1c2"]],   // category (any category ↔ any group)
+      "categories": [
+        { "label": "Shades of blue", "tiles": ["NAVY", "SKY"] }
+      ]
+    }
+  ],
+
+  // --- hints, grouped by size; players reveal them in file order per size ---
+  "hints": [
+    {
+      "size": "small",           // any label: "small" / "big" / "nudge" / ...
+      "text": "Shown to the player.",
+      "highlight": {             // all optional
+        "prompt": ["scattered"], // substrings of the prompt to mark
+        "slots": ["c1", "c2"],   // slot ids to glow
+        "tiles": ["KIDNEY"]      // tile ids OR tile texts to glow
+      }
+    }
+  ]
+}
+```
+
+Checks compose: a puzzle can mix `slots` and `categories` checks (or gain new
+check types later) without the engine knowing anything about "crosswords" or
+"connections".
+
+## Interactions
+
+- Drag tiles into slots; nearby slots highlight while dragging.
+- Dropping a tile on an occupied slot swaps the old tile out.
+- With chaining on, tiles dropped side-by-side snap into a word that drags as
+  one piece; a chain dropped over a run of empty slots fills all of them.
+- Double-tap: pops a placed tile out of its slot / detaches a tile from a chain.
+- Generated tiles are deleted by dropping them on the ✕ that appears while
+  dragging.
+- The puzzle auto-checks whenever every slot is filled: wrong shakes, right
+  celebrates.
