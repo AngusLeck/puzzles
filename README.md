@@ -40,8 +40,10 @@ Player progress (solves, hints revealed, board state) is kept in
 
   // --- slots: positions are grid units, fractions allowed (for row gaps) ---
   "slots": [
-    { "id": "c1", "x": 0, "y": 0, "label": "1" }   // label = small corner number
-  ],
+    { "id": "c1", "x": 0, "y": 0,
+      "label": "1",              // optional small corner label (crossword numbering)
+      "centerLabel": "A" }       // optional large faded label filling the slot;
+  ],                             //   visible until a tile covers it
   "slotGap": 8,                  // optional px between slots (default 8)
   "tileAspect": 2.4,             // optional width/height ratio (word tiles; default 1)
   "chainTiles": false,           // optional; tiles snapping side-by-side into draggable

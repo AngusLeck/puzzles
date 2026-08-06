@@ -97,6 +97,11 @@
     transition:box-shadow .15s ease, background .3s ease;
   }
   .slot .slotLabel{position:absolute; top:2px; left:5px; font-size:10px; font-weight:700; color:var(--ink-soft); opacity:.8;}
+  .slot .slotCenterLabel{
+    position:absolute; inset:0; display:grid; place-items:center;
+    font-weight:800; letter-spacing:.03em; text-transform:uppercase;
+    color:var(--ink-soft); opacity:.45; pointer-events:none;
+  }
   .slot.target{box-shadow:inset 0 2px 5px rgba(0,0,0,.1), inset 0 0 0 2.5px var(--accent); background:color-mix(in srgb, var(--accent) 12%, var(--slot-bg));}
   .slot.glow{box-shadow:inset 0 0 0 3px var(--glow), 0 0 14px 2px color-mix(in srgb, var(--glow) 65%, transparent); animation:glowPulse 1.1s ease infinite;}
   @keyframes glowPulse{50%{box-shadow:inset 0 0 0 3px var(--glow), 0 0 22px 5px color-mix(in srgb, var(--glow) 75%, transparent);}}
@@ -426,6 +431,12 @@ function layoutBoard() {
     slot.el.style.top = slot.py + "px";
     slot.el.style.width = tileW + "px";
     slot.el.style.height = tileH + "px";
+    const centerLabelEl = slot.el.querySelector(".slotCenterLabel");
+    if (centerLabelEl) {
+      const len = centerLabelEl.textContent.length;
+      const fontSize = len <= 2 ? tileH * 0.48 : Math.min(tileH * 0.44, (tileW - 12) / (len * 0.62));
+      centerLabelEl.style.fontSize = Math.max(9, fontSize) + "px";
+    }
   }
   for (const tile of S.tiles.values()) applyTileSize(tile);
   S.boardRect = board.getBoundingClientRect();
@@ -451,7 +462,10 @@ function buildSlots() {
   for (const def of S.puzzle.slots || []) {
     const slotEl = document.createElement("div");
     slotEl.className = "slot";
-    if (def.label != null) slotEl.innerHTML = `<span class="slotLabel">${escapeHtml(String(def.label))}</span>`;
+    let labelHtml = "";
+    if (def.label != null) labelHtml += `<span class="slotLabel">${escapeHtml(String(def.label))}</span>`;
+    if (def.centerLabel != null) labelHtml += `<span class="slotCenterLabel">${escapeHtml(String(def.centerLabel))}</span>`;
+    slotEl.innerHTML = labelHtml;
     el("slotLayer").appendChild(slotEl);
     S.slots.set(def.id, { id: def.id, def, el: slotEl, px: 0, py: 0, tileId: null });
   }
