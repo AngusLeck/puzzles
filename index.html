@@ -1215,19 +1215,32 @@ function maybeCheckSolution(options = {}) {
 // On a wrong answer, jostle the incorrect tiles a little way out of their slots
 // (only for exact-letter "slots" checks, where a wrong tile is well-defined).
 function shakeLooseWrongTiles() {
-  const wrong = [];
+  const wrongIds = new Set();
   for (const check of S.puzzle.checks || []) {
-    if (check.type !== "slots") continue;
-    for (const [slotId, accepted] of Object.entries(check.answers)) {
-      const slot = S.slots.get(slotId);
-      if (!slot || !slot.tileId) continue;
-      const tile = S.tiles.get(slot.tileId);
-      const list = Array.isArray(accepted) ? accepted : [accepted];
-      if (!list.some((a) => String(a).toUpperCase() === tile.text.toUpperCase())) wrong.push(tile);
+    if (check.type === "slots") {
+      // A tile is wrong if its letter doesn't match the answer for its slot.
+      for (const [slotId, accepted] of Object.entries(check.answers)) {
+        const slot = S.slots.get(slotId);
+        if (!slot || !slot.tileId) continue;
+        const tile = S.tiles.get(slot.tileId);
+        const list = Array.isArray(accepted) ? accepted : [accepted];
+        if (!list.some((a) => String(a).toUpperCase() === tile.text.toUpperCase())) wrongIds.add(tile.id);
+      }
+    } else if (check.type === "categories") {
+      // A group is correct only if its tiles exactly form one category; otherwise
+      // every tile in that group is wrong (one bad tile invalidates the group).
+      const cats = check.categories.map((c) => c.tiles.map((t) => t.toUpperCase()).sort().join(" "));
+      for (const group of check.slotGroups) {
+        const tiles = group.map((id) => { const s = S.slots.get(id); return s && s.tileId ? S.tiles.get(s.tileId) : null; });
+        if (tiles.some((t) => !t)) continue;
+        const key = tiles.map((t) => t.text.toUpperCase()).sort().join(" ");
+        if (!cats.includes(key)) for (const t of tiles) wrongIds.add(t.id);
+      }
     }
   }
-  if (!wrong.length) return;
-  for (const tile of wrong) {
+  if (!wrongIds.size) return;
+  for (const id of wrongIds) {
+    const tile = S.tiles.get(id); if (!tile) continue;
     const slot = S.slots.get(tile.slotId);
     if (slot) slot.tileId = null;
     tile.slotId = null;
