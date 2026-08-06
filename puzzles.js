@@ -284,7 +284,7 @@ window.PUZZLES = [
     "subtitle": "Sort 16 tiles into four groups",
     "attribution": "RAD",
     "prompt": "Sort the sixteen tiles into four groups of four. Each row holds one complete group — any group can go in any row.",
-    "tileAspect": 2.4,
+    "tileAspect": 1,
     "slotGap": 8,
     "chainTiles": false,
     "tiles": [
