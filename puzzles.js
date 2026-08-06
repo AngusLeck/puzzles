@@ -31,8 +31,7 @@ window.PUZZLES = [
   // --------------------------------------------------------------- cryptics
   {
     "id": "cryptic-idiom",
-    "title": "Cryptic: suck an egg",
-    "subtitle": "A gentle single clue",
+    "title": "Cryptic №1",
     "attribution": "AD",
     "prompt": "I would, I am - shortly, going to \"suck an egg\" as they say. (5)",
     "tileGenerator": { "type": "letters" },
@@ -44,16 +43,15 @@ window.PUZZLES = [
       { "type": "slots", "answers": { "s1": "I", "s2": "D", "s3": "I", "s4": "O", "s5": "M" } }
     ],
     "hints": [
-      { "size": "definition", "text": "Definition: \"as they say\" — a common turn of phrase.", "highlight": { "prompt": ["as they say"] } },
-      { "size": "wordplay", "text": "\"I would\" and \"I am\", written \"shortly\", become contractions; \"suck an egg\" swallows an egg-shaped letter.", "highlight": { "prompt": ["I would, I am - shortly", "suck an egg"] } },
-      { "size": "full parse", "text": "I'd + I'm = IDIM, then suck in an egg (O) → ID·I·O·M. Answer: IDIOM.", "highlight": { "slots": ["s1", "s2", "s3", "s4", "s5"] } }
+      { "size": "definition", "text": "\"as they say\" is the definition.", "highlight": { "prompt": ["as they say"] } },
+      { "size": "wordplay", "text": "\"shortly\" is an abbreviation indicator; \"suck an egg\" is an insertion — something round gets swallowed.", "highlight": { "prompt": ["shortly", "suck an egg"] } },
+      { "size": "fodder", "text": "Shorten \"I would, I am\"; the thing swallowed is the egg.", "highlight": { "prompt": ["I would, I am", "egg"] } }
     ]
   },
 
   {
     "id": "cryptic-coffee",
-    "title": "Cryptic: bean stew",
-    "subtitle": "Shear the sheep carefully",
+    "title": "Cryptic №2",
     "attribution": "RAD",
     "prompt": "Cough heard by overzealous sheep shearer, making bean stew? (6)",
     "tileGenerator": { "type": "letters" },
@@ -65,16 +63,15 @@ window.PUZZLES = [
       { "type": "slots", "answers": { "s1": "C", "s2": "O", "s3": "F", "s4": "F", "s5": "E", "s6": "E" } }
     ],
     "hints": [
-      { "size": "definition", "text": "Definition: \"bean stew?\" — the question mark warns it's a loose, punny definition. Think of a drink brewed from beans.", "highlight": { "prompt": ["bean stew?"] } },
-      { "size": "wordplay", "text": "\"heard\" flags a homophone; the \"shearer\" trims letters off a word — overzealously.", "highlight": { "prompt": ["Cough heard", "overzealous sheep shearer"] } },
-      { "size": "full parse", "text": "COFF (\"cough\" heard) + EE (shear SHEEP down to HEE, then one snip too many → EE). Answer: COFFEE.", "highlight": { "slots": ["s1", "s2", "s3", "s4", "s5", "s6"] } }
+      { "size": "definition", "text": "\"bean stew?\" is the definition.", "highlight": { "prompt": ["bean stew?"] } },
+      { "size": "wordplay", "text": "\"heard\" is a homophone indicator; the \"overzealous shearer\" is a deletion — it trims letters off a word.", "highlight": { "prompt": ["heard", "overzealous sheep shearer"] } },
+      { "size": "fodder", "text": "The words being worked on are \"Cough\" and \"sheep\".", "highlight": { "prompt": ["Cough", "sheep"] } }
     ]
   },
 
   {
     "id": "cryptic-train",
-    "title": "Cryptic: forever delayed",
-    "subtitle": "A single clue",
+    "title": "Cryptic №3",
     "attribution": "AD",
     "prompt": "Delayed again, means drizzle on fourth station? (5)",
     "tileGenerator": { "type": "letters" },
@@ -86,16 +83,15 @@ window.PUZZLES = [
       { "type": "slots", "answers": { "s1": "T", "s2": "R", "s3": "A", "s4": "I", "s5": "N" } }
     ],
     "hints": [
-      { "size": "definition", "text": "Definition: \"Delayed again\" — what is famous for always being delayed? A means of transport.", "highlight": { "prompt": ["Delayed again"] } },
-      { "size": "wordplay", "text": "\"drizzle\" is a light kind of one word; \"fourth station\" singles out one letter.", "highlight": { "prompt": ["drizzle", "fourth station"] } },
-      { "size": "full parse", "text": "T (the fourth letter of sta·T·ion) + RAIN (drizzle) = TRAIN.", "highlight": { "slots": ["s1", "s2", "s3", "s4", "s5"] } }
+      { "size": "definition", "text": "\"Delayed again\" is the definition.", "highlight": { "prompt": ["Delayed again"] } },
+      { "size": "wordplay", "text": "\"fourth\" is a selection indicator — pick a single letter from a neighbouring word; the rest is a charade (join the parts).", "highlight": { "prompt": ["fourth"] } },
+      { "size": "fodder", "text": "\"fourth\" acts on \"station\"; \"drizzle\" supplies another word.", "highlight": { "prompt": ["drizzle", "station"] } }
     ]
   },
 
   {
     "id": "cryptic-car",
-    "title": "Cryptic: Fibonacci",
-    "subtitle": "Count carefully",
+    "title": "Cryptic №4",
     "attribution": "APD",
     "prompt": "Fibonacci silently crept about armoured vehicle. (3)",
     "tileGenerator": { "type": "letters" },
@@ -106,16 +102,15 @@ window.PUZZLES = [
       { "type": "slots", "answers": { "s1": "C", "s2": "A", "s3": "R" } }
     ],
     "hints": [
-      { "size": "definition", "text": "Definition: just \"vehicle\" — not \"armoured vehicle\". \"Armoured\" is fodder; the surface wants you to picture a tank.", "highlight": { "prompt": ["vehicle"] } },
-      { "size": "wordplay", "text": "\"Fibonacci\" sets a counting pattern — 0, 1, 1, 2 — for how many letters into each following word to reach.", "highlight": { "prompt": ["Fibonacci"] } },
-      { "size": "full parse", "text": "Take 0 of \"silently\" (none), the 1st of \"Crept\", the 1st of \"About\", the 2nd of \"aRmoured\" → C + A + R = CAR.", "highlight": { "slots": ["s1", "s2", "s3"] } }
+      { "size": "definition", "text": "\"vehicle\" is the definition — not \"armoured vehicle\".", "highlight": { "prompt": ["vehicle"] } },
+      { "size": "wordplay", "text": "\"Fibonacci\" is a selection indicator: use the Fibonacci sequence to pick letters out of some neighbouring fodder.", "highlight": { "prompt": ["Fibonacci"] } },
+      { "size": "fodder", "text": "The letters are drawn from the words that follow: \"silently crept about armoured\".", "highlight": { "prompt": ["silently crept about armoured"] } }
     ]
   },
 
   {
     "id": "cryptic-death",
-    "title": "Cryptic: the end",
-    "subtitle": "Name the symbols aloud",
+    "title": "Cryptic №5",
     "attribution": "APD",
     "prompt": "King David the 5th, stripped of his title. Exclaimed \"!&~#\" initially. Got there in the end? (5)",
     "tileGenerator": { "type": "letters" },
@@ -127,16 +122,15 @@ window.PUZZLES = [
       { "type": "slots", "answers": { "s1": "D", "s2": "E", "s3": "A", "s4": "T", "s5": "H" } }
     ],
     "hints": [
-      { "size": "definition", "text": "Definition: \"Got there in the end?\" — the ultimate destination.", "highlight": { "prompt": ["Got there in the end?"] } },
-      { "size": "wordplay", "text": "\"the 5th\" points to the fifth letter of David once his \"title\" (King) is stripped; then the symbols must be named out loud, \"initially\".", "highlight": { "prompt": ["David the 5th", "!&~#"] } },
-      { "size": "full parse", "text": "D (5th letter of DaviD) + E·A·T·H (Exclamation, Ampersand, Tilde, Hash — each symbol's name, first letters) = DEATH.", "highlight": { "slots": ["s1", "s2", "s3", "s4", "s5"] } }
+      { "size": "definition", "text": "\"Got there in the end?\" is the definition.", "highlight": { "prompt": ["Got there in the end?"] } },
+      { "size": "wordplay", "text": "\"the 5th\" (after \"stripped of his title\") is a selection indicator for one letter; \"initially\" takes first letters — of what the symbols are called.", "highlight": { "prompt": ["the 5th", "stripped of his title", "initially"] } },
+      { "size": "fodder", "text": "The single letter comes from \"David\"; the initials come from naming \"!&~#\".", "highlight": { "prompt": ["David", "!&~#"] } }
     ]
   },
 
   {
     "id": "cryptic-felony",
-    "title": "Cryptic: cooking the books",
-    "subtitle": "Spell the numbers out",
+    "title": "Cryptic №6",
     "attribution": "APD",
     "prompt": "CFO fudged the numbers, wrote 5 - 4 + 50 / y? (6)",
     "tileGenerator": { "type": "letters" },
@@ -148,16 +142,15 @@ window.PUZZLES = [
       { "type": "slots", "answers": { "s1": "F", "s2": "E", "s3": "L", "s4": "O", "s5": "N", "s6": "Y" } }
     ],
     "hints": [
-      { "size": "definition", "text": "Definition: \"CFO fudged the numbers\" — cooking the books is a crime.", "highlight": { "prompt": ["CFO fudged the numbers"] } },
-      { "size": "wordplay", "text": "Spell the numerals out: 5 → FIVE, 4 → IV, 50 → L. And read \"/\" as the word \"on\".", "highlight": { "prompt": ["5 - 4 + 50 / y"] } },
-      { "size": "full parse", "text": "FIVE minus IV = FE, plus L (50) = FEL, then / = ON, then Y → FEL·ON·Y = FELONY.", "highlight": { "slots": ["s1", "s2", "s3", "s4", "s5", "s6"] } }
+      { "size": "definition", "text": "\"CFO fudged the numbers\" is the definition.", "highlight": { "prompt": ["CFO fudged the numbers"] } },
+      { "size": "wordplay", "text": "It's an arithmetic charade: \"-\" removes letters, \"+\" joins them, \"/\" is a positional word — and each numeral becomes letters (spelled out, or as Roman numerals).", "highlight": { "prompt": ["5 - 4 + 50 / y"] } },
+      { "size": "fodder", "text": "Your raw material is the numbers themselves: 5, 4, 50 and y.", "highlight": { "prompt": ["5 - 4 + 50 / y"] } }
     ]
   },
 
   {
     "id": "cryptic-unionised",
-    "title": "Cryptic: two ways to read it",
-    "subtitle": "A double definition with a twist",
+    "title": "Cryptic №7",
     "attribution": "RAD",
     "prompt": "Charges dropped against employer over wage theft allegations. (9)",
     "tileGenerator": { "type": "letters" },
@@ -170,16 +163,14 @@ window.PUZZLES = [
       { "type": "slots", "answers": { "s1": "U", "s2": "N", "s3": "I", "s4": "O", "s5": "N", "s6": "I", "s7": "S", "s8": "E", "s9": "D" } }
     ],
     "hints": [
-      { "size": "definition", "text": "It's a double definition — and the trick is that the two meanings are pronounced differently (a heteronym).", "highlight": { "prompt": ["Charges dropped", "wage theft allegations"] } },
-      { "size": "wordplay", "text": "\"Charges\" can mean electrical charges — ions. \"Charges dropped\" = without ions.", "highlight": { "prompt": ["Charges dropped"] } },
-      { "size": "full parse", "text": "UN-IONISED (ions/charges removed) reads the same letters as UNIONISED (workers organised against a wage-thieving boss). Answer: UNIONISED.", "highlight": { "slots": ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"] } }
+      { "size": "definition", "text": "The whole clue is two definitions of one word — and that word is a heteronym (same spelling, two pronunciations).", "highlight": { "prompt": ["Charges dropped", "wage theft allegations"] } },
+      { "size": "wordplay", "text": "\"Charges\" needn't be legal — think physics.", "highlight": { "prompt": ["Charges dropped"] } }
     ]
   },
 
   {
     "id": "cryptic-ipad",
-    "title": "Cryptic: listening device",
-    "subtitle": "Tilt a letter",
+    "title": "Cryptic №8",
     "attribution": "AD",
     "prompt": "Tilting his head - dad eyed listening device. (4)",
     "tileGenerator": { "type": "letters" },
@@ -191,16 +182,15 @@ window.PUZZLES = [
       { "type": "slots", "answers": { "s1": "I", "s2": "P", "s3": "A", "s4": "D" } }
     ],
     "hints": [
-      { "size": "definition", "text": "Definition: \"listening device\" — read very loosely and cheekily (it does play audio).", "highlight": { "prompt": ["listening device"] } },
-      { "size": "wordplay", "text": "\"eyed\" gives you an eye = I; then a letter in \"dad\" gets tilted.", "highlight": { "prompt": ["dad eyed"] } },
-      { "size": "full parse", "text": "I (eye, from \"eyed\") + PAD (\"dad\" with a d tilted round into a p) = IPAD.", "highlight": { "slots": ["s1", "s2", "s3", "s4"] } }
+      { "size": "definition", "text": "\"listening device\" is the definition (read loosely).", "highlight": { "prompt": ["listening device"] } },
+      { "size": "wordplay", "text": "\"Tilting\" is a rotation indicator — a letter gets turned around; \"eye(d)\" chips in a letter that sounds like itself.", "highlight": { "prompt": ["Tilting", "eyed"] } },
+      { "size": "fodder", "text": "The letters come from \"dad\" and \"eyed\".", "highlight": { "prompt": ["dad eyed"] } }
     ]
   },
 
   {
     "id": "cryptic-egg",
-    "title": "Where's the egg?",
-    "subtitle": "A RD original — there is no wrong answer",
+    "title": "Cryptic №9",
     "attribution": "RD",
     "prompt": "Where the egg is, no one knows. (6)",
     "tileGenerator": { "type": "letters" },
@@ -271,15 +261,19 @@ window.PUZZLES = [
       }
     ],
     "hints": [
-      { "size": "definition", "text": "1 Down — definition is \"bone\". \"ruined\" is an anagram signal, and \"Carpenter\" hides CARP.", "highlight": { "prompt": ["a metal bone", "ruined"], "slots": ["c5r0", "c5r1", "c5r2", "c5r3", "c5r4", "c5r5", "c5r6", "c5r7", "c5r8", "c5r9"] } },
-      { "size": "definition", "text": "2 Across — definition is \"in a church\" (a churchgoer). \"Carpenter\" points to one very famous carpenter.", "highlight": { "prompt": ["in a church"], "slots": ["c0r2", "c1r2", "c2r2", "c3r2", "c4r2", "c5r2", "c6r2", "c7r2", "c8r2"] } },
-      { "size": "definition", "text": "3 Across — definition is \"running the company\". \"confused\" is an anagram signal.", "highlight": { "prompt": ["running the company", "confused"], "slots": ["c0r7", "c1r7", "c2r7", "c3r7", "c4r7", "c5r7", "c6r7", "c7r7", "c8r7", "c9r7", "c10r7"] } },
+      { "size": "definition", "text": "1 Down — \"bone\" is the definition.", "highlight": { "prompt": ["bone"], "slots": ["c5r0", "c5r1", "c5r2", "c5r3", "c5r4", "c5r5", "c5r6", "c5r7", "c5r8", "c5r9"] } },
+      { "size": "definition", "text": "2 Across — \"in a church\" is the definition.", "highlight": { "prompt": ["in a church"], "slots": ["c0r2", "c1r2", "c2r2", "c3r2", "c4r2", "c5r2", "c6r2", "c7r2", "c8r2"] } },
+      { "size": "definition", "text": "3 Across — \"running the company\" is the definition.", "highlight": { "prompt": ["running the company"], "slots": ["c0r7", "c1r7", "c2r7", "c3r7", "c4r7", "c5r7", "c6r7", "c7r7", "c8r7", "c9r7", "c10r7"] } },
 
-      { "size": "full parse", "text": "1 Down: CARP (from Carpenter) with an anagram (\"ruined\") of \"a metal\" wrapped around it → META·CARP·AL = METACARPAL.", "highlight": { "slots": ["c5r0", "c5r1", "c5r2", "c5r3", "c5r4", "c5r5", "c5r6", "c5r7", "c5r8", "c5r9"] } },
-      { "size": "full parse", "text": "2 Across: CHRIST (the carpenter — also \"family holiday\" CHRISTMAS with the \"-mas\" left off) + IAN, married/joined on = CHRISTIAN.", "highlight": { "slots": ["c0r2", "c1r2", "c2r2", "c3r2", "c4r2", "c5r2", "c6r2", "c7r2", "c8r2"] } },
-      { "size": "full parse", "text": "3 Across: anagram (\"confused\") of CARP (from Carpenter) + \"heron is\" = CHAIRPERSON.", "highlight": { "slots": ["c0r7", "c1r7", "c2r7", "c3r7", "c4r7", "c5r7", "c6r7", "c7r7", "c8r7", "c9r7", "c10r7"] } },
+      { "size": "wordplay", "text": "1 Down — \"ruined\" signals an anagram; and the repeated \"Carpenter\" is wordplay, not decoration.", "highlight": { "prompt": ["ruined"], "slots": ["c5r0", "c5r1", "c5r2", "c5r3", "c5r4", "c5r5", "c5r6", "c5r7", "c5r8", "c5r9"] } },
+      { "size": "wordplay", "text": "2 Across — \"married\" is a charade indicator: join the parts together.", "highlight": { "prompt": ["married"], "slots": ["c0r2", "c1r2", "c2r2", "c3r2", "c4r2", "c5r2", "c6r2", "c7r2", "c8r2"] } },
+      { "size": "wordplay", "text": "3 Across — \"confused\" signals an anagram.", "highlight": { "prompt": ["confused"], "slots": ["c0r7", "c1r7", "c2r7", "c3r7", "c4r7", "c5r7", "c6r7", "c7r7", "c8r7", "c9r7", "c10r7"] } },
 
-      { "size": "bonus", "text": "2 Across has a wordier twin — try solving it from this instead: \"Carpenter married Ian in a church. (9)\" Same answer; the short clue is really a clue for the long one.", "highlight": { "slots": ["c0r2", "c1r2", "c2r2", "c3r2", "c4r2", "c5r2", "c6r2", "c7r2", "c8r2"] } }
+      { "size": "fodder", "text": "1 Down — the anagram works on \"a metal\", and \"Carpenter\" lends a CARP.", "highlight": { "prompt": ["a metal"], "slots": ["c5r0", "c5r1", "c5r2", "c5r3", "c5r4", "c5r5", "c5r6", "c5r7", "c5r8", "c5r9"] } },
+      { "size": "fodder", "text": "2 Across — the parts are CHRIST (the carpenter) and IAN. (\"family holiday\" is CHRISTMAS with -mas left off — the same CHRIST.)", "highlight": { "prompt": ["Ian"], "slots": ["c0r2", "c1r2", "c2r2", "c3r2", "c4r2", "c5r2", "c6r2", "c7r2", "c8r2"] } },
+      { "size": "fodder", "text": "3 Across — the anagram works on \"heron is\", with a CARP from \"Carpenter\".", "highlight": { "prompt": ["heron is"], "slots": ["c0r7", "c1r7", "c2r7", "c3r7", "c4r7", "c5r7", "c6r7", "c7r7", "c8r7", "c9r7", "c10r7"] } },
+
+      { "size": "bonus", "text": "2 Across has a wordier twin — try it from this instead: \"Carpenter married Ian in a church. (9)\" Same answer; the short clue is really a clue for the long one.", "highlight": { "slots": ["c0r2", "c1r2", "c2r2", "c3r2", "c4r2", "c5r2", "c6r2", "c7r2", "c8r2"] } }
     ]
   },
 

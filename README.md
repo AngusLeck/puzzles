@@ -66,9 +66,12 @@ Player progress (solves, hints revealed, board state) is kept in
   ],                             //   the tiles (for open-ended / joke puzzles)
 
   // --- hints, grouped by size; players reveal them in file order per size ---
-  //     each distinct `size` becomes its own reveal button. A good Minute-Cryptic-
-  //     style ladder is "definition" → "wordplay" → "full parse", plus a "bonus"
-  //     size for a "try this variation of the same clue" nudge.
+  //     each distinct `size` becomes its own reveal button. The ladder should
+  //     guide, never hand over the answer: "definition" (just name/highlight the
+  //     definition) → "wordplay" (name the indicators and their *type*, not the
+  //     result) → "fodder" (highlight the words the indicators act on). Add a
+  //     "bonus" size for a "try this variation of the same clue" nudge. Keep the
+  //     puzzle's title/subtitle neutral too — don't echo the definition.
   "hints": [
     {
       "size": "definition",      // any label: "small" / "definition" / "bonus" / ...
