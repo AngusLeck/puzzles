@@ -22,7 +22,9 @@ Player progress (solves, hints revealed, board state) is kept in
 
 ```jsonc
 {
-  "id": "mini-cryptic-1",        // required, unique, stable (progress is keyed on it)
+  "id": "cryptic-1",             // required, unique, stable. Keyed on for progress
+                                 //   AND used as the shareable URL route (#/<id>),
+                                 //   so keep it neutral/spoiler-free and don't rename it
   "title": "Mini Cryptic №1",    // shown in the list and puzzle header
   "subtitle": "optional blurb",  // shown on the list card
   "releaseDate": "2026-12-25",   // optional; puzzle is hidden until this local date

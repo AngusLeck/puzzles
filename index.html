@@ -460,7 +460,7 @@ function renderList() {
     card.innerHTML = `<div class="cardTitle">${escapeHtml(p.title || p.id)}</div>
       ${p.subtitle ? `<div class="cardSub">${escapeHtml(p.subtitle)}</div>` : ""}
       ${badges.length ? `<div class="cardMeta">${badges.join("")}</div>` : ""}`;
-    card.addEventListener("click", () => openPuzzle(p));
+    card.addEventListener("click", () => { location.hash = "#/" + p.id; });
     listEl.appendChild(card);
   }
   const note = el("upcomingNote");
@@ -1379,7 +1379,7 @@ function resetBoard() {
   layoutBoard(); dealFreshBoard(); updateSelectionUI(); saveBoard();
 }
 
-el("backBtn").addEventListener("click", closePuzzle);
+el("backBtn").addEventListener("click", () => { location.hash = ""; });
 el("hintBtn").addEventListener("click", openSheet);
 el("bankHandle").addEventListener("click", () => toggleBank());
 el("sheetScrim").addEventListener("click", closeSheet);
@@ -1450,7 +1450,23 @@ for (const b of document.querySelectorAll(".themeBtn")) b.addEventListener("clic
 if (themeMedia.addEventListener) themeMedia.addEventListener("change", () => { if (themePref() === "auto") applyTheme(); });
 applyTheme();
 
-renderList();
+/* ------------------------------------------------------ routing (hash) */
+// Each puzzle has a shareable URL: .../#/<id>. Ids are stable and spoiler-free,
+// so titles can change without breaking links. Hash routing needs no server
+// config, which suits GitHub Pages.
+function applyRoute() {
+  const id = decodeURIComponent((location.hash || "").replace(/^#\/?/, ""));
+  const puzzle = id ? PUZZLES.find((p) => p.id === id && isReleased(p)) : null;
+  if (puzzle) {
+    if (!S.open || !S.puzzle || S.puzzle.id !== puzzle.id) openPuzzle(puzzle);
+  } else {
+    if (S.open) closePuzzle();
+    else renderList();
+    if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+  }
+}
+window.addEventListener("hashchange", applyRoute);
+applyRoute();
 </script>
 </body>
 </html>

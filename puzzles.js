@@ -7,7 +7,7 @@ window.PUZZLES = [
 
   // --------------------------------------------------------------- cryptics
   {
-    "id": "cryptic-idiom",
+    "id": "cryptic-1",
     "title": "Cryptic №1",
     "attribution": "AD",
     "prompt": "I would, I am - shortly, going to \"suck an egg\" as they say. (5)",
@@ -27,7 +27,7 @@ window.PUZZLES = [
   },
 
   {
-    "id": "cryptic-coffee",
+    "id": "cryptic-2",
     "title": "Cryptic №2",
     "attribution": "RAD",
     "prompt": "Cough heard by overzealous sheep shearer, making bean stew? (6)",
@@ -47,7 +47,7 @@ window.PUZZLES = [
   },
 
   {
-    "id": "cryptic-train",
+    "id": "cryptic-3",
     "title": "Cryptic №3",
     "attribution": "AD",
     "prompt": "Delayed again, means drizzle on fourth station? (5)",
@@ -67,7 +67,7 @@ window.PUZZLES = [
   },
 
   {
-    "id": "cryptic-car",
+    "id": "cryptic-4",
     "title": "Cryptic №4",
     "attribution": "APD",
     "prompt": "Fibonacci silently crept about armoured vehicle. (3)",
@@ -86,7 +86,7 @@ window.PUZZLES = [
   },
 
   {
-    "id": "cryptic-death",
+    "id": "cryptic-5",
     "title": "Cryptic №5",
     "attribution": "APD",
     "prompt": "King David the 5th, stripped of his title. Exclaimed \"!&~#\" initially. Got there in the end? (5)",
@@ -106,7 +106,7 @@ window.PUZZLES = [
   },
 
   {
-    "id": "cryptic-felony",
+    "id": "cryptic-6",
     "title": "Cryptic №6",
     "attribution": "APD",
     "prompt": "CFO fudged the numbers, wrote 5 - 4 + 50 / y? (6)",
@@ -126,7 +126,7 @@ window.PUZZLES = [
   },
 
   {
-    "id": "cryptic-unionised",
+    "id": "cryptic-7",
     "title": "Cryptic №7",
     "attribution": "RAD",
     "prompt": "Charges dropped against employer over wage theft allegations. (9)",
@@ -146,7 +146,7 @@ window.PUZZLES = [
   },
 
   {
-    "id": "cryptic-ipad",
+    "id": "cryptic-8",
     "title": "Cryptic №8",
     "attribution": "AD",
     "releaseDate": "2026-08-14",
@@ -167,7 +167,7 @@ window.PUZZLES = [
   },
 
   {
-    "id": "cryptic-egg",
+    "id": "cryptic-9",
     "title": "Cryptic №9",
     "attribution": "RD",
     "prompt": "Where the egg is, no one knows. (6)",
@@ -186,7 +186,7 @@ window.PUZZLES = [
 
   // ------------------------------------------------------- carpenter crossword
   {
-    "id": "carpenter-crossword",
+    "id": "crossword-1",
     "title": "Carpenter's Cross",
     "subtitle": "Three carpenters, one grid",
     "attribution": "AD & AP",
