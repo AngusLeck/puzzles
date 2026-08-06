@@ -387,7 +387,7 @@ const Sound = (() => {
   function grindUpdate(speed, contact) {   // speed = px this frame; contact = touching other tiles
     if (!grind) return;
     const t = ctx.currentTime;
-    const hiTarget = clamp(speed * 0.0016, 0, 0.016);            // across the board: barely there
+    const hiTarget = clamp(speed * 0.0009, 0, 0.009);            // across the board: barely there
     const loTarget = contact ? clamp(speed * 0.022, 0, 0.34) : 0; // against tiles: deeper and clearly audible
     grind.hiLevel += (hiTarget - grind.hiLevel) * 0.35;
     grind.loLevel += (loTarget - grind.loLevel) * 0.35;
@@ -710,9 +710,10 @@ function separateUnits() {
         const dir = pushX ? Math.sign((ra.x + ra.w / 2) - (rb.x + rb.w / 2)) || 1
                           : Math.sign((ra.y + ra.h / 2) - (rb.y + rb.h / 2)) || 1;
         const aDragged = a.id === draggedId, bDragged = b.id === draggedId;
-        // Heavy stone grind: shove is gradual, so tiles slide past with friction
-        // instead of teleporting apart. Dragged tiles nudge others very gently.
-        const rate = (aDragged || bDragged) ? 0.14 : 0.34;
+        // Heavy stone: tiles resist being shoved. A dragged tile only inches its
+        // neighbours aside, so you can't bulldoze the board; loose tiles settle
+        // apart a little faster than that but still gradually.
+        const rate = (aDragged || bDragged) ? 0.05 : 0.26;
         const amount = (pushX ? overlapX : overlapY) * rate;
         const aShare = aDragged ? 0 : (bDragged ? 1 : 0.5);
         const bShare = 1 - aShare;
