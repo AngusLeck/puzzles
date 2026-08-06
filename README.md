@@ -116,6 +116,9 @@ slots with a snap.
   the selection; backspace clears and steps back. (Only when tiles can be added.)
 - Generated tiles are deleted by dropping them on the ✕ that appears while dragging.
 - **Sound**: synthesized stone clacks for pick-up / snap / place / remove / solve,
-  plus a roll for the bank. Toggle with the 🔊 button (persisted).
+  a roll for the bank, and a grainy grind while dragging (subtle across the board,
+  deeper against other tiles). Toggle with the 🔊 button (persisted).
+- **Theme**: the 🌗/☀️/🌙 button cycles Auto → Light → Dark (persisted); Auto
+  follows the OS. Available on the list and in-puzzle.
 - The puzzle auto-checks whenever every slot is filled: wrong shakes, right
   celebrates.

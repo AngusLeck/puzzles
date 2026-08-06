@@ -16,13 +16,11 @@
     --cat-1:#f5c84c; --cat-2:#93c464; --cat-3:#7cb7e0; --cat-4:#b58fd9;
     --board:#e8dec9; --stone:#fbf8f0; --shadow:50,40,20;
   }
-  @media (prefers-color-scheme: dark){
-    :root{
-      --bg:#201d17; --card:#2a2620; --ink:#ece6d8; --ink-soft:#a49a86; --line:#39342a;
-      --stone-hi:#d9d0be; --stone-lo:#b3a992; --stone-ink:#2a2620; --stone-edge:rgba(0,0,0,.45);
-      --slot-bg:rgba(255,248,230,.05); --slot-edge:rgba(255,248,230,.13); --accent:#cf885a;
-      --board:#211d16; --stone:#cfc6b4; --shadow:0,0,0;
-    }
+  :root[data-theme="dark"]{
+    --bg:#201d17; --card:#2a2620; --ink:#ece6d8; --ink-soft:#a49a86; --line:#39342a;
+    --stone-hi:#d9d0be; --stone-lo:#b3a992; --stone-ink:#2a2620; --stone-edge:rgba(0,0,0,.45);
+    --slot-bg:rgba(255,248,230,.05); --slot-edge:rgba(255,248,230,.13); --accent:#cf885a;
+    --board:#211d16; --stone:#cfc6b4; --shadow:0,0,0;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0;}
@@ -64,7 +62,7 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E");
     background-size:220px 220px; opacity:.035; mix-blend-mode:multiply;
   }
-  @media (prefers-color-scheme: dark){ #board::after{ mix-blend-mode:soft-light; opacity:.05; } }
+  :root[data-theme="dark"] #board::after{ mix-blend-mode:soft-light; opacity:.05; }
   #board.shake{animation:boardShake .4s ease;}
   @keyframes boardShake{0%,100%{transform:translateX(0)} 20%{transform:translateX(-7px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(3px)}}
   #rowBackdrops,#slotLayer,#tileLayer,#fxLayer{position:absolute; inset:0;}
@@ -111,7 +109,7 @@
     background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size:150px 150px; opacity:.08; mix-blend-mode:multiply;
   }
-  @media (prefers-color-scheme: dark){ .tile::before{ mix-blend-mode:soft-light; opacity:.14; } }
+  :root[data-theme="dark"] .tile::before{ mix-blend-mode:soft-light; opacity:.14; }
   .tile.lifted{
     cursor:grabbing;
     box-shadow:
@@ -131,6 +129,7 @@
   .floatBtn:active{transform:translateY(1px);}
   .floatBtn.armed{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
   #backBtn{left:calc(10px + env(safe-area-inset-left)); top:calc(10px + env(safe-area-inset-top));}
+  .listTheme{right:calc(14px + env(safe-area-inset-right)); top:calc(14px + env(safe-area-inset-top)); left:auto; font-size:17px; padding:8px 12px;}
   #topRight{position:fixed; z-index:600; right:calc(10px + env(safe-area-inset-right)); top:calc(10px + env(safe-area-inset-top)); display:flex; gap:8px;}
   #topRight .floatBtn{position:static;}
 
@@ -225,10 +224,21 @@
   }
   #hintToast .x{position:absolute; right:10px; top:8px; opacity:.6; font-size:16px;}
 </style>
+<script>
+  // Set the theme attribute before first paint to avoid a flash.
+  (function () {
+    try {
+      var pref = localStorage.getItem("puzzles-theme") || "auto";
+      var dark = pref === "dark" || (pref === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
+    } catch (e) { document.documentElement.dataset.theme = "light"; }
+  })();
+</script>
 </head>
 <body>
 
 <div class="wrap" id="listView">
+  <button class="floatBtn themeBtn listTheme" id="themeBtnList" aria-label="Theme">🌗</button>
   <h1>Puzzles</h1>
   <p class="tagline">Tiles &amp; slots. Drag, snap, solve.</p>
   <div id="puzzleList"></div>
@@ -246,6 +256,7 @@
   <button class="floatBtn" id="backBtn" aria-label="Back to list">←</button>
   <div id="topRight">
     <button class="floatBtn" id="promptToggle" aria-label="Show or hide clue">☰</button>
+    <button class="floatBtn themeBtn" id="themeBtnPlay" aria-label="Theme">🌗</button>
     <button class="floatBtn" id="muteBtn" aria-label="Toggle sound">🔊</button>
     <button class="floatBtn" id="hintBtn">💡</button>
     <button class="floatBtn" id="resetBtn" aria-label="Reset puzzle">↺</button>
@@ -332,10 +343,10 @@ const Sound = (() => {
     bus.connect(env).connect(master);
     src.start(t); src.stop(t + decay + 0.03);
   }
-  function pick()   { stone([300, 540], 0.08, 0.32, 0.02); }
-  function place()  { stone([760, 1250, 2050], 0.055, 0.5); }
-  function snap()   { stone([1050, 1750, 2700], 0.05, 0.55); }
-  function remove() { stone([170, 290, 420], 0.13, 0.42, 0.03); }
+  function pick()   { stone([300, 540], 0.08, 0.42, 0.02); }
+  function place()  { stone([760, 1250, 2050], 0.055, 0.66); }
+  function snap()   { stone([1050, 1750, 2700], 0.05, 0.72); }
+  function remove() { stone([170, 290, 420], 0.13, 0.56, 0.03); }
   function roll(open) {
     if (muted || !ensure()) return;
     const t = ctx.currentTime;
@@ -344,15 +355,15 @@ const Sound = (() => {
     lp.frequency.setValueAtTime(open ? 240 : 620, t);
     lp.frequency.linearRampToValueAtTime(open ? 620 : 240, t + 0.26);
     const g = ctx.createGain();
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.16, t + 0.05);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.2, t + 0.05);
     g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
     src.connect(lp).connect(g).connect(master); src.start(t); src.stop(t + 0.3);
   }
   function solve() {
     if (muted) return;
-    [0, 1, 2, 3].forEach((i) => setTimeout(() => stone([720 + i * 230, 1300 + i * 280], 0.065, 0.48), i * 115));
+    [0, 1, 2, 3].forEach((i) => setTimeout(() => stone([720 + i * 230, 1300 + i * 280], 0.065, 0.62), i * 115));
   }
-  function bad() { stone([130, 210], 0.14, 0.34, 0.03); setTimeout(() => stone([110, 180], 0.13, 0.28, 0.03), 75); }
+  function bad() { stone([130, 210], 0.14, 0.44, 0.03); setTimeout(() => stone([110, 180], 0.13, 0.36, 0.03), 75); }
 
   // Continuous "grinding" while a tile is dragged: looped noise split into a
   // gritty low band and a sandy high band, its level driven by drag speed —
@@ -361,29 +372,34 @@ const Sound = (() => {
   function grindStart() {
     if (muted || !ensure() || grind) return;
     const src = ctx.createBufferSource(); src.buffer = noiseBuf; src.loop = true;
-    const bus = ctx.createGain(); bus.gain.value = 0;
-    const lo = ctx.createBiquadFilter(); lo.type = "bandpass"; lo.frequency.value = 430; lo.Q.value = 1.0;
-    const loG = ctx.createGain(); loG.gain.value = 0.42;
-    const hi = ctx.createBiquadFilter(); hi.type = "bandpass"; hi.frequency.value = 3000; hi.Q.value = 0.6;
-    const hiG = ctx.createGain(); hiG.gain.value = 0.5;
-    src.connect(lo).connect(loG).connect(bus);
-    src.connect(hi).connect(hiG).connect(bus);
-    bus.connect(master); src.start();
-    grind = { src, bus, hi, level: 0 };
+    // board hiss: a light sandy high band, kept very quiet
+    const hi = ctx.createBiquadFilter(); hi.type = "bandpass"; hi.frequency.value = 3200; hi.Q.value = 0.6;
+    const hiBus = ctx.createGain(); hiBus.gain.value = 0;
+    // contact grind: a deeper low band, only heard when sliding against tiles
+    const lo = ctx.createBiquadFilter(); lo.type = "bandpass"; lo.frequency.value = 250; lo.Q.value = 1.1;
+    const loBus = ctx.createGain(); loBus.gain.value = 0;
+    src.connect(hi).connect(hiBus).connect(master);
+    src.connect(lo).connect(loBus).connect(master);
+    src.start();
+    grind = { src, hi, hiBus, loBus, hiLevel: 0, loLevel: 0 };
   }
-  function grindUpdate(speed) {       // speed = px moved this frame
+  function grindUpdate(speed, contact) {   // speed = px this frame; contact = touching other tiles
     if (!grind) return;
-    const target = clamp(speed * 0.007, 0, 0.13);
-    grind.level += (target - grind.level) * 0.35;
     const t = ctx.currentTime;
-    grind.bus.gain.setTargetAtTime(grind.level, t, 0.02);
-    grind.hi.frequency.setTargetAtTime(2400 + speed * 45, t, 0.03);
+    const hiTarget = clamp(speed * 0.004, 0, 0.045);              // across the board: very subtle
+    const loTarget = contact ? clamp(speed * 0.011, 0, 0.16) : 0; // against tiles: deeper, a bit louder
+    grind.hiLevel += (hiTarget - grind.hiLevel) * 0.35;
+    grind.loLevel += (loTarget - grind.loLevel) * 0.35;
+    grind.hiBus.gain.setTargetAtTime(grind.hiLevel, t, 0.02);
+    grind.loBus.gain.setTargetAtTime(grind.loLevel, t, 0.03);
+    grind.hi.frequency.setTargetAtTime(2600 + speed * 40, t, 0.03);
   }
   function grindStop() {
     if (!grind) return;
     const g = grind; grind = null;
-    g.bus.gain.setTargetAtTime(0, ctx.currentTime, 0.05);
-    setTimeout(() => { try { g.src.stop(); } catch {} }, 140);
+    g.hiBus.gain.setTargetAtTime(0, ctx.currentTime, 0.05);
+    g.loBus.gain.setTargetAtTime(0, ctx.currentTime, 0.05);
+    setTimeout(() => { try { g.src.stop(); } catch {} }, 160);
   }
 
   function toggleMute() { muted = !muted; localStorage.setItem(MUTE_KEY, muted ? "1" : "0"); if (muted) grindStop(); return muted; }
@@ -738,7 +754,15 @@ function tick(now) {
     if (du) {
       const dx = du.ax - (S.drag.lastAx ?? du.ax), dy = du.ay - (S.drag.lastAy ?? du.ay);
       S.drag.lastAx = du.ax; S.drag.lastAy = du.ay;
-      Sound.grindUpdate(Math.hypot(dx, dy));
+      const rw = unitWidth(du);
+      let contact = false;
+      for (const other of S.tiles.values()) {
+        if (other.dying || other.unitId === du.id) continue;
+        const ox = Math.min(du.ax + rw, other.x + L.tileW) - Math.max(du.ax, other.x);
+        const oy = Math.min(du.ay + L.tileH, other.y + L.tileH) - Math.max(du.ay, other.y);
+        if (ox > -2 && oy > -2) { contact = true; break; }
+      }
+      Sound.grindUpdate(Math.hypot(dx, dy), contact);
     }
   }
 
@@ -1255,6 +1279,28 @@ resetButton.addEventListener("click", () => {
   if (!resetButton.classList.contains("armed")) { resetButton.classList.add("armed"); resetButton.textContent = "Reset?"; setTimeout(() => { resetButton.classList.remove("armed"); resetButton.textContent = "↺"; }, 2200); return; }
   resetButton.classList.remove("armed"); resetButton.textContent = "↺"; resetBoard();
 });
+
+/* ------------------------------------------------------------- theme */
+const THEME_KEY = "puzzles-theme";
+const themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
+function themePref() { return localStorage.getItem(THEME_KEY) || "auto"; }
+function effectiveTheme() { const p = themePref(); return p === "auto" ? (themeMedia.matches ? "dark" : "light") : p; }
+function applyTheme() {
+  const pref = themePref(), eff = effectiveTheme();
+  document.documentElement.dataset.theme = eff;
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", eff === "dark" ? "#211d16" : "#e8dec9");
+  const icon = pref === "auto" ? "🌗" : pref === "light" ? "☀️" : "🌙";
+  for (const b of document.querySelectorAll(".themeBtn")) { b.textContent = icon; b.setAttribute("aria-label", `Theme: ${pref}`); }
+}
+function cycleTheme() {
+  const order = ["auto", "light", "dark"];
+  localStorage.setItem(THEME_KEY, order[(order.indexOf(themePref()) + 1) % 3]);
+  applyTheme();
+}
+for (const b of document.querySelectorAll(".themeBtn")) b.addEventListener("click", cycleTheme);
+if (themeMedia.addEventListener) themeMedia.addEventListener("change", () => { if (themePref() === "auto") applyTheme(); });
+applyTheme();
 
 renderList();
 </script>
