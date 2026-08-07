@@ -452,9 +452,11 @@ function renderList() {
     const progress = puzzleProgress(p);
     const card = document.createElement("button"); card.className = "puzzleCard";
     const hintsUsed = (progress.hints || []).length;
+    const mistakes = progress.mistakes || 0;
     const badges = [];
     if (progress.solved) badges.push(`<span class="badge solved">✓ Solved</span>`);
     if (hintsUsed) badges.push(`<span class="badge">💡 ${hintsUsed} hint${hintsUsed > 1 ? "s" : ""} used</span>`);
+    if (mistakes) badges.push(`<span class="badge">✗ ${mistakes} mistake${mistakes > 1 ? "s" : ""}</span>`);
     if (p.releaseDate) badges.push(`<span class="badge">${p.releaseDate}</span>`);
     if (p.attribution) badges.push(`<span class="badge">by ${escapeHtml(p.attribution)}</span>`);
     card.innerHTML = `<div class="cardTitle">${escapeHtml(p.title || p.id)}</div>
@@ -479,6 +481,7 @@ function openPuzzle(puzzle) {
   S.solvedEver = !!progress.solved;
   S.revealedHints = Array.isArray(progress.hints) ? [...progress.hints] : [];
   S.genCounter = progress.genCounter || 1;
+  S.mistakes = progress.mistakes || 0;
 
   document.body.classList.add("playing");
   el("listView").hidden = true;
@@ -690,7 +693,7 @@ function restoreBoard(saved) {
 
 function saveBoard() {
   const progress = S.progressAll[S.puzzle.id] || (S.progressAll[S.puzzle.id] = {});
-  progress.solved = S.solvedEver; progress.hints = S.revealedHints; progress.genCounter = S.genCounter;
+  progress.solved = S.solvedEver; progress.hints = S.revealedHints; progress.genCounter = S.genCounter; progress.mistakes = S.mistakes;
   const board = { gen: [], slots: {}, units: [] };
   for (const t of S.tiles.values()) if (t.generated && !t.dying) board.gen.push({ id: t.id, text: t.text });
   for (const s of S.slots.values()) if (s.tileId && !S.tiles.get(s.tileId)?.dying) board.slots[s.id] = s.tileId;
@@ -1211,7 +1214,9 @@ function maybeCheckSolution(options = {}) {
   else if (!options.quiet) {
     const board = el("board"); board.classList.remove("shake"); void board.offsetWidth; board.classList.add("shake");
     Sound.bad();
+    S.mistakes++;                 // each distinct wrong full board is one mistake
     shakeLooseWrongTiles();
+    saveBoard();
   }
 }
 
@@ -1259,7 +1264,7 @@ function onSolved(celebrate) {
   S.lock = true; S.solvedEver = true; saveBoard();
   deselectSlot(); el("tileBank").classList.remove("open");
   for (const t of S.tiles.values()) t.el.classList.add("locked");
-  const banner = el("solvedBanner"), hintsUsed = S.revealedHints.length;
+  const banner = el("solvedBanner"), hintsUsed = S.revealedHints.length, mistakes = S.mistakes;
   let chips = "";
   for (const check of S.puzzle.checks || []) {
     if (check.type !== "categories") continue;
@@ -1267,7 +1272,8 @@ function onSolved(celebrate) {
     chips = matches.sort((a, b) => a.groupIndex - b.groupIndex)
       .map(({ categoryIndex }) => `<span class="chip" style="background:${CATEGORY_COLORS[categoryIndex % CATEGORY_COLORS.length]}">${escapeHtml(check.categories[categoryIndex].label || "")}</span>`).join("");
   }
-  banner.innerHTML = `🎉 Solved! ${chips}<span class="muted">${hintsUsed ? `${hintsUsed} hint${hintsUsed > 1 ? "s" : ""} used` : "no hints used"}</span>`;
+  const stat = (n, word) => (n ? `${n} ${word}${n > 1 ? "s" : ""}` : `no ${word}s`);
+  banner.innerHTML = `🎉 Solved! ${chips}<span class="muted">${stat(hintsUsed, "hint")} · ${stat(mistakes, "mistake")}</span>`;
   banner.hidden = false;
   el("promptPanel").classList.add("collapsed");
   if (celebrate) {
