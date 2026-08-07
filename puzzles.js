@@ -33,7 +33,7 @@ window.PUZZLES = [
       {
         size: "wordplay",
         text: "one of our indicators tells us to abbreviate some neighboring fodder, the other tells us to insert fodder into some other fodder.",
-        highlight: { prompt: ["shortly", "going to suck an"] },
+        highlight: { prompt: ["shortly", 'going to "suck an egg"'] },
       },
       {
         size: "fodder",
@@ -109,12 +109,12 @@ window.PUZZLES = [
       },
       {
         size: "wordplay",
-        text: "one of our indicators is a selection indicator, picking a single letter out by position; the rest is a charade — pieces set side by side.",
-        highlight: { prompt: ["fourth"] },
+        text: "one of our indicators is a selection indicator, another is a synonym indicator, we also have a simple joining indicator.",
+        highlight: { prompt: ["fourth", "means", "on"] },
       },
       {
         size: "fodder",
-        text: 'our fodder is "station" (which gives up a single letter) and "drizzle" (which gives a synonym).',
+        text: 'our fodder is "station" and "drizzle".',
         highlight: { prompt: ["drizzle", "station"] },
       },
     ],
@@ -135,7 +135,7 @@ window.PUZZLES = [
     hints: [
       {
         size: "definition",
-        text: '"vehicle" is the definition — not "armoured vehicle".',
+        text: '"vehicle" is the definition.',
         highlight: { prompt: ["vehicle"] },
       },
       {
@@ -145,7 +145,7 @@ window.PUZZLES = [
       },
       {
         size: "fodder",
-        text: 'our letters are picked out of the words that follow — "silently crept about armoured".',
+        text: 'We\'ll find our letters amongst "silently crept about armoured".',
         highlight: { prompt: ["silently crept about armoured"] },
       },
     ],
@@ -179,15 +179,20 @@ window.PUZZLES = [
       },
       {
         size: "wordplay",
-        text: "two selection indicators here: one strips a word down and takes a letter by position; the other takes initials — but of things you must name aloud first.",
+        text: "Two selection indicators here: they tell us which letters in our fodder we want. We've also been told to ignore some of the fodder, and to say some of the fodder out loud.",
         highlight: {
-          prompt: ["the 5th", "stripped of his title", "initially"],
+          prompt: [
+            "the 5th",
+            "stripped of his title",
+            "initially",
+            "Exclaimed",
+          ],
         },
       },
       {
         size: "fodder",
-        text: 'our fodder is "David" (one letter from it) and the symbols "!&~#" (name each one).',
-        highlight: { prompt: ["David", "!&~#"] },
+        text: 'Our fodder is "King David" and "!&~#".',
+        highlight: { prompt: ["King David", "!&~#"] },
       },
     ],
   },
@@ -215,18 +220,23 @@ window.PUZZLES = [
     hints: [
       {
         size: "definition",
-        text: '"CFO fudged the numbers" is the definition.',
+        text: '"CFO fudged the numbers" is the definition. The "?" tells us it\'s a bit of a stretch.',
         highlight: { prompt: ["CFO fudged the numbers"] },
       },
       {
         size: "wordplay",
-        text: "our indicators are the maths symbols — between them they take letters away, add letters on, and one stands in for a little word; the numerals themselves need turning into letters.",
-        highlight: { prompt: ["5 - 4 + 50 / y"] },
+        text: "our indicators are the maths symbols — between them they take letters away, add letters on. We've also been told to write something out",
+        highlight: { prompt: ["wrote", "-", "+"] },
       },
       {
         size: "fodder",
-        text: "our fodder is the numbers themselves — 5, 4 and 50 (and the y); some want spelling out, some want to be Roman numerals.",
-        highlight: { prompt: ["5 - 4 + 50 / y"] },
+        text: "We'll need to do quite a bit of substitution on our fodder to get the letters we need.",
+        highlight: { prompt: ["5", "4", "50 / y"] },
+      },
+      {
+        size: "bonus",
+        text: 'a mathematician might read the fraction as 50 "on" y',
+        highlight: { prompt: ["50 / y"] },
       },
     ],
   },
@@ -267,13 +277,27 @@ window.PUZZLES = [
     hints: [
       {
         size: "definition",
-        text: "it is a double definition — two definitions of one word, and the word is a heteronym (spelled one way, said two).",
-        highlight: { prompt: ["Charges dropped", "wage theft allegations"] },
+        text: "it is a double definition — two definitions of one word",
+        highlight: {
+          prompt: [
+            "Charges dropped against employer over wage theft allegations.",
+          ],
+        },
       },
       {
-        size: "wordplay",
+        size: "bonus",
         text: '"Charges" needn\'t be legal — think physics.',
         highlight: { prompt: ["Charges dropped"] },
+      },
+      {
+        size: "bonus",
+        text: "The target word is a heteronym (spelled one way, said two)",
+        highlight: {
+          prompt: [
+            "Charges dropped",
+            "against employer over wage theft allegations.",
+          ],
+        },
       },
     ],
   },
@@ -297,18 +321,18 @@ window.PUZZLES = [
     hints: [
       {
         size: "definition",
-        text: '"listening device" is the definition (read loosely).',
-        highlight: { prompt: ["listening device"] },
+        text: '"device" is the definition.',
+        highlight: { prompt: ["device"] },
       },
       {
         size: "wordplay",
-        text: "one of our indicators turns a letter around until it becomes another; elsewhere a word simply sounds like a single letter.",
-        highlight: { prompt: ["Tilting", "eyed"] },
+        text: "One of our indicators turns a letter around until it becomes another, the letter is selected by some other indicators; one indicator tells us to read aloud another to reveal it's true purpose.",
+        highlight: { prompt: ["Tilting", "his head", "eyed", "listening"] },
       },
       {
         size: "fodder",
-        text: 'our fodder is "dad" and "eyed".',
-        highlight: { prompt: ["dad eyed"] },
+        text: 'our fodder is "dad" and "eye".',
+        highlight: { prompt: ["dad eye"] },
       },
     ],
   },
@@ -331,7 +355,7 @@ window.PUZZLES = [
     hints: [
       {
         size: "small",
-        text: "There genuinely is no answer. Fill the six slots with whatever letters you like and it counts as solved.",
+        text: "You can't make a clue without breaking a few eggs, just give it a go - have faith!",
         highlight: {},
       },
     ],
