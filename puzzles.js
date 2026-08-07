@@ -33,7 +33,7 @@ window.PUZZLES = [
       {
         size: "wordplay",
         text: "one of our indicators tells us to abbreviate some neighboring fodder, the other tells us to insert fodder into some other fodder.",
-        highlight: { prompt: ["shortly", 'going to "suck an egg"'] },
+        highlight: { prompt: ["shortly", 'going to "suck an'] },
       },
       {
         size: "fodder",
