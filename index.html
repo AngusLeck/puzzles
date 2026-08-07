@@ -1456,7 +1456,9 @@ applyTheme();
 // config, which suits GitHub Pages.
 function applyRoute() {
   const id = decodeURIComponent((location.hash || "").replace(/^#\/?/, ""));
-  const puzzle = id ? PUZZLES.find((p) => p.id === id && isReleased(p)) : null;
+  // A direct link opens any puzzle, released or not (the list still hides
+  // unreleased ones from browsing) — handy for sharing a preview early.
+  const puzzle = id ? PUZZLES.find((p) => p.id === id) : null;
   if (puzzle) {
     if (!S.open || !S.puzzle || S.puzzle.id !== puzzle.id) openPuzzle(puzzle);
   } else {
