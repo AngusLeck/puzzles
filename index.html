@@ -1347,7 +1347,8 @@ function applyHint(hint) {
   if (promptMarks.length && S.promptCollapsed) { S.promptCollapsed = false; el("promptPanel").classList.remove("collapsed"); }
   for (const slotId of hl.slots || []) { const slot = S.slots.get(slotId); if (slot) { slot.el.classList.add("glow"); S.glowingEls.push(slot.el); } }
   for (const key of hl.tiles || []) for (const tile of S.tiles.values()) if (tile.id === key || tile.text.toUpperCase() === String(key).toUpperCase()) { tile.el.classList.add("glow"); S.glowingEls.push(tile.el); }
-  clearTimeout(S.highlightTimer); S.highlightTimer = setTimeout(clearHighlights, 8000);
+  // Highlights persist until a new hint is applied (clearHighlights above) or the
+  // hint is dismissed (the toast) — no auto-clear timeout.
 }
 function clearHighlights() { clearTimeout(S.highlightTimer); for (const e of S.glowingEls) e.classList.remove("glow"); S.glowingEls = []; if (S.open) renderPrompt([]); }
 
