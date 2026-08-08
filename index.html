@@ -160,7 +160,7 @@
   #solvedBanner .chip{font-size:12px; font-weight:700; padding:3px 10px; border-radius:99px; color:#2b2317;}
   #solvedBanner .muted{font-weight:500; color:var(--ink-soft); font-size:13px;}
   #solvedBanner{cursor:pointer; padding-right:30px;}
-  #solvedBanner .bx{position:absolute; top:7px; right:11px; opacity:.55; font-size:15px; font-weight:700;}
+  #solvedBanner .bx{position:absolute; top:50%; right:12px; transform:translateY(-50%); opacity:.55; font-size:15px; font-weight:700;}
   .rowBackdrop{position:absolute; border-radius:14px; opacity:.5;}
 
   /* ---------- roll-up tile bank ---------- */
@@ -258,14 +258,14 @@
     <div id="fxLayer"></div>
   </div>
 
-  <button class="floatBtn" id="backBtn" aria-label="Back to list">←</button>
+  <button class="floatBtn" id="backBtn" aria-label="Back to puzzles" title="Back to puzzles">←</button>
   <div id="topRight">
-    <button class="floatBtn" id="promptToggle" aria-label="Show or hide clue">☰</button>
+    <button class="floatBtn" id="promptToggle" aria-label="Show or hide the clue" title="Show / hide the clue">☰</button>
     <button class="floatBtn themeBtn" id="themeBtnPlay" aria-label="Theme">🌗</button>
     <button class="floatBtn" id="muteBtn" aria-label="Toggle sound">🔊</button>
     <button class="floatBtn" id="noHelpBtn" aria-label="Help mode">👼</button>
-    <button class="floatBtn" id="hintBtn">💡</button>
-    <button class="floatBtn" id="resetBtn" aria-label="Reset puzzle">↺</button>
+    <button class="floatBtn" id="hintBtn" aria-label="Get a hint" title="Get a hint">💡</button>
+    <button class="floatBtn" id="resetBtn" aria-label="Reset puzzle" title="Reset this puzzle">↺</button>
   </div>
 
   <div id="promptPanel"><div id="promptDrag" aria-label="Drag clue" title="Drag to move · double-tap to reset"></div><div id="promptText"></div></div>
@@ -299,6 +299,7 @@ const STORAGE_KEY = "puzzles-progress-v1";
 const MUTE_KEY = "puzzles-muted";
 const CHAIN_GAP = 2;
 const DRAG_START_DIST = 6;
+const SLOT_Z = 2;   // z-index for tiles resting in slots — always below loose tiles
 const DOUBLE_TAP_MS = 320;
 const CATEGORY_COLORS = ["var(--cat-1)", "var(--cat-2)", "var(--cat-3)", "var(--cat-4)"];
 
@@ -478,7 +479,7 @@ function renderList() {
 function openPuzzle(puzzle) {
   S.open = true; S.puzzle = puzzle;
   S.tiles.clear(); S.units.clear(); S.slots.clear(); S.slotByCoord.clear();
-  S.unitSeq = 1; S.zSeq = 10; S.drag = null; S.pending = null; S.lock = false;
+  S.unitSeq = 1; S.zSeq = 10; S.drag = null; S.pending = null; S.solved = false;
   S.lastCheckSignature = null; S.selectedSlotId = null; S.selectedUnitId = null; S.typeDir = "h"; S.promptCollapsed = false; S.pointer = null;
   const progress = puzzleProgress(puzzle);
   S.solvedEver = !!progress.solved;
@@ -493,6 +494,7 @@ function openPuzzle(puzzle) {
   el("promptPanel").classList.remove("collapsed");
   el("hintBtn").hidden = !(puzzle.hints && puzzle.hints.length);
   el("muteBtn").textContent = Sound.isMuted() ? "🔇" : "🔊";
+  el("muteBtn").title = Sound.isMuted() ? "Sound off — tap to unmute" : "Sound on — tap to mute";
   el("board").classList.remove("shake");   // clear any lingering shake so it doesn't replay on open
   updateNoHelpBtn();
   el("rowBackdrops").innerHTML = ""; el("slotLayer").innerHTML = "";
@@ -605,7 +607,7 @@ function buildSlots() {
     if (def.label != null) html += `<span class="slotLabel">${escapeHtml(String(def.label))}</span>`;
     if (def.centerLabel != null) html += `<span class="slotCenterLabel">${escapeHtml(String(def.centerLabel))}</span>`;
     slotEl.innerHTML = html;
-    slotEl.addEventListener("pointerdown", (e) => { if (S.lock || !S.puzzle.tileGenerator) return; e.stopPropagation(); Sound.ensure(); selectSlot(S.slots.get(def.id)); });
+    slotEl.addEventListener("pointerdown", (e) => { const sl = S.slots.get(def.id); if (!S.puzzle.tileGenerator || (sl && sl.locked)) return; e.stopPropagation(); Sound.ensure(); selectSlot(sl); });
     el("slotLayer").appendChild(slotEl);
     S.slots.set(def.id, { id: def.id, def, el: slotEl, px: 0, py: 0, tileId: null });
   }
@@ -680,13 +682,14 @@ function restoreBoard(saved) {
   for (const [slotId, tileId] of Object.entries(saved.slots || {})) {
     const slot = S.slots.get(slotId), tile = S.tiles.get(tileId);
     if (!slot || !tile || slot.tileId || tile.slotId) continue;
-    slot.tileId = tile.id; tile.slotId = slot.id; tile.x = slot.px; tile.y = slot.py;
+    slot.tileId = tile.id; tile.slotId = slot.id; tile.x = slot.px; tile.y = slot.py; tile.el.style.zIndex = SLOT_Z;
   }
   for (const su of saved.units || []) {
     const tileIds = (su.tiles || []).filter((tid) => { const t = S.tiles.get(tid); return t && !t.slotId && !t.unitId; });
     if (!tileIds.length) continue;
     const unit = createUnit(tileIds, (su.nx || 0) * S.layout.boardW, (su.ny || 0) * S.layout.boardH);
     unit.tileIds.forEach((tid, i) => { const t = S.tiles.get(tid); t.x = unit.ax + i * (S.layout.tileW + CHAIN_GAP); t.y = unit.ay; });
+    bringUnitToFront(unit);   // loose tiles always ride above inset slotted ones
   }
   let dealIndex = 0;
   for (const tile of S.tiles.values()) {
@@ -782,7 +785,7 @@ function tick(now) {
       const rw = unitWidth(du);
       let contact = false;
       for (const other of S.tiles.values()) {
-        if (other.dying || other.unitId === du.id) continue;
+        if (other.dying || other.unitId === du.id || other.slotId) continue;   // slotted tiles are inset — don't grind against them
         const ox = Math.min(du.ax + rw, other.x + L.tileW) - Math.max(du.ax, other.x);
         const oy = Math.min(du.ay + L.tileH, other.y + L.tileH) - Math.max(du.ay, other.y);
         if (ox > -4 && oy > -4) { contact = true; break; }
@@ -823,7 +826,7 @@ function tick(now) {
 function toBoard(e) { const r = S.boardRect || el("board").getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
 
 function onTilePointerDown(e, tile) {
-  if (S.lock || tile.dying || S.drag) return;
+  if (tile.locked || tile.dying || S.drag) return;
   e.preventDefault(); e.stopPropagation();
   Sound.ensure();
   const now = performance.now();
@@ -905,7 +908,7 @@ function endDrag() {
 }
 
 function handleDoubleTap(tile) {
-  if (S.lock || tile.dying) return;
+  if (tile.locked || tile.dying) return;
   if (tile.slotId) { popTileOutOfSlot(tile); Sound.pick(); saveBoard(); S.lastCheckSignature = null; }
   else {
     const unit = S.units.get(tile.unitId);
@@ -924,7 +927,7 @@ function computeSlotMapping(unit) {
     const cx = unit.ax + i * (L.tileW + CHAIN_GAP) + L.tileW / 2, cy = unit.ay + L.tileH / 2;
     let best = null, bestDist = radius;
     for (const slot of S.slots.values()) {
-      if (used.has(slot.id)) continue;
+      if (used.has(slot.id) || slot.locked) continue;
       if (slot.tileId && !single) continue;
       const d = Math.hypot(slot.px + L.tileW / 2 - cx, slot.py + L.tileH / 2 - cy);
       if (d < bestDist) { bestDist = d; best = slot; }
@@ -941,7 +944,7 @@ function placeMapping(unit, mapping) {
   for (const [tile, slot] of mapping) {
     if (slot.tileId) { const ev = S.tiles.get(slot.tileId); if (ev) popTileOutOfSlot(ev); }
     tile.unitId = null; tile.slotId = slot.id; slot.tileId = tile.id;
-    tile.snapAt = now; tile.el.style.zIndex = 5;
+    tile.snapAt = now; tile.el.style.zIndex = SLOT_Z;
     flashSlot(slot);
   }
   Sound.snap();
@@ -1005,7 +1008,7 @@ function removeTileImmediate(tile) {
 
 /* -------------------------------------------------- slot selection / typing */
 function selectSlot(slot) {
-  if (!slot) return;
+  if (!slot || slot.locked) return;
   S.selectedUnitId = null;
   if (S.selectedSlotId === slot.id) {
     const other = S.typeDir === "h" ? "v" : "h";
@@ -1048,7 +1051,7 @@ function typeLetterIntoSelected(letter) {
   if (slot.tileId) { const old = S.tiles.get(slot.tileId); if (old) removeTileImmediate(old); slot.tileId = null; }
   const id = `gen-${S.genCounter++}`;
   const tile = createTile(id, letter, true);
-  tile.slotId = slot.id; slot.tileId = id; tile.x = slot.px; tile.y = slot.py; tile.s = 0.3; tile.snapAt = performance.now(); tile.el.style.zIndex = 5;
+  tile.slotId = slot.id; slot.tileId = id; tile.x = slot.px; tile.y = slot.py; tile.s = 0.3; tile.snapAt = performance.now(); tile.el.style.zIndex = SLOT_Z;
   flashSlot(slot); Sound.place();
   const next = neighborSlot(slot, S.typeDir, 1);
   if (next) S.selectedSlotId = next.id;
@@ -1090,14 +1093,12 @@ function addLetter(letter, nearPointer) {
   spawnLetterTile(letter);
 }
 function onBankKey(letter) {
-  if (S.lock) return;
   Sound.ensure();
   addLetter(letter, false);
 }
 // Press-and-drag a fresh tile straight out of the bank onto the board; a plain
 // tap (no drag) just adds one via onBankKey.
 function onBankKeyPointerDown(e, letter, keyEl) {
-  if (S.lock) return;
   e.preventDefault(); Sound.ensure();
   const pointerId = e.pointerId, startX = e.clientX, startY = e.clientY;
   let unit = null, dragging = false;
@@ -1187,7 +1188,6 @@ function freeSpawnSpot() {
 }
 
 function spawnLetterTile(letter, pos) {
-  if (S.lock) return;
   const { tileW, tileH, boardW, boardH, scatterTop } = S.layout;
   const id = `gen-${S.genCounter++}`;
   const tile = createTile(id, letter, true);
@@ -1217,7 +1217,7 @@ function removeNewestFreeGeneratedTile() {
 }
 
 document.addEventListener("keydown", (e) => {
-  if (!S.open || S.lock || !S.puzzle.tileGenerator) return;
+  if (!S.open || !S.puzzle.tileGenerator) return;
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   if (S.selectedSlotId) {
     if (/^[a-z]$/i.test(e.key)) { e.preventDefault(); typeLetterIntoSelected(e.key.toUpperCase()); return; }
@@ -1275,7 +1275,7 @@ function matchCategories(check) {
 }
 
 function maybeCheckSolution(options = {}) {
-  if (S.lock) return;
+  if (S.solved) return;
   const allFilled = [...S.slots.values()].every((s) => s.tileId);
   if (!allFilled) { S.lastCheckSignature = null; return; }
   const signature = JSON.stringify([...S.slots.values()].map((s) => s.tileId));
@@ -1341,9 +1341,16 @@ function shakeLooseAllTiles() {
 }
 
 function onSolved(celebrate) {
-  S.lock = true; S.solvedEver = true; saveBoard();
+  S.solved = true; S.solvedEver = true; saveBoard();
   deselectSlot(); el("tileBank").classList.remove("open");
-  for (const t of S.tiles.values()) t.el.classList.add("locked");
+  // Freeze the solution — its tiles and slots — but leave the rest of the board
+  // live so you can keep messing about with loose tiles.
+  for (const slot of S.slots.values()) {
+    if (!slot.tileId) continue;
+    slot.locked = true;
+    const t = S.tiles.get(slot.tileId);
+    if (t) { t.locked = true; t.el.classList.add("locked"); t.el.style.zIndex = SLOT_Z; }
+  }
   const banner = el("solvedBanner"), hintsUsed = S.revealedHints.length, mistakes = S.mistakes;
   let chips = "";
   for (const check of S.puzzle.checks || []) {
@@ -1459,8 +1466,8 @@ function resetBoard() {
   const progress = S.progressAll[S.puzzle.id]; if (progress) delete progress.board; persistAllProgress();
   for (const t of S.tiles.values()) t.el.remove();
   S.tiles.clear(); S.units.clear();
-  for (const s of S.slots.values()) s.tileId = null;
-  S.lock = false; S.lastCheckSignature = null;
+  for (const s of S.slots.values()) { s.tileId = null; s.locked = false; }
+  S.solved = false; S.lastCheckSignature = null;
   el("solvedBanner").hidden = true; el("rowBackdrops").innerHTML = "";
   el("promptPanel").classList.remove("collapsed"); S.promptCollapsed = false;
   layoutBoard(); dealFreshBoard(); updateSelectionUI(); saveBoard();
@@ -1471,7 +1478,7 @@ el("hintBtn").addEventListener("click", openSheet);
 el("bankHandle").addEventListener("click", () => toggleBank());
 el("sheetScrim").addEventListener("click", closeSheet);
 el("hintToast").addEventListener("click", () => { hideToast(); clearHighlights(); });
-el("muteBtn").addEventListener("click", () => { const m = Sound.toggleMute(); el("muteBtn").textContent = m ? "🔇" : "🔊"; if (!m) { Sound.ensure(); Sound.snap(); } });
+el("muteBtn").addEventListener("click", () => { const m = Sound.toggleMute(); el("muteBtn").textContent = m ? "🔇" : "🔊"; el("muteBtn").title = m ? "Sound off — tap to unmute" : "Sound on — tap to mute"; if (!m) { Sound.ensure(); Sound.snap(); } });
 
 /* -------- "no help" setting: any mistake clears the whole board -------- */
 const NOHELP_KEY = "puzzles-nohelp";
@@ -1540,7 +1547,8 @@ function applyTheme() {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", eff === "dark" ? "#211d16" : "#e8dec9");
   const icon = pref === "auto" ? "🌗" : pref === "light" ? "☀️" : "🌙";
-  for (const b of document.querySelectorAll(".themeBtn")) { b.textContent = icon; b.setAttribute("aria-label", `Theme: ${pref}`); }
+  const label = `Theme: ${pref} — tap to change`;
+  for (const b of document.querySelectorAll(".themeBtn")) { b.textContent = icon; b.setAttribute("aria-label", label); b.setAttribute("title", label); }
 }
 function cycleTheme() {
   const order = ["auto", "light", "dark"];
