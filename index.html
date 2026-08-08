@@ -129,11 +129,16 @@
   }
   .floatBtn:active{transform:translateY(1px);}
   @media (hover:hover){
-    /* keep hover cheap to paint — border/brightness only. Changing box-shadow or
-       background re-runs the backdrop-filter blur and feels laggy. */
-    .floatBtn:hover, .hintButtons .hbtn:hover, .puzzleCard:hover{border-color:var(--accent);}
-    .floatBtn:hover, #bankKeys .key:hover{filter:brightness(1.05);}
+    .floatBtn:hover{background:var(--card); box-shadow:0 3px 12px -2px rgba(0,0,0,.32);}
+    .puzzleCard:hover{transform:translateY(-1px); box-shadow:0 2px 4px rgba(0,0,0,.06), 0 10px 24px -8px rgba(0,0,0,.2);}
+    #bankKeys .key:hover{transform:translateY(-1px);}
+    .hintButtons .hbtn:hover{border-color:var(--ink-soft);}
   }
+  /* fast custom tooltip (native title lags ~0.5s) */
+  #tooltip{position:fixed; z-index:1200; pointer-events:none; background:var(--ink); color:var(--bg);
+    font-size:11.5px; font-weight:600; white-space:nowrap; padding:4px 9px; border-radius:7px;
+    box-shadow:0 4px 14px -4px rgba(0,0,0,.45); opacity:0; transition:opacity .09s ease;}
+  #tooltip.show{opacity:1;}
   .floatBtn.armed{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
   #backBtn{left:calc(10px + env(safe-area-inset-left)); top:calc(10px + env(safe-area-inset-top));}
   .listTheme{right:calc(14px + env(safe-area-inset-right)); top:calc(14px + env(safe-area-inset-top)); left:auto; font-size:17px; padding:8px 12px;}
@@ -264,14 +269,14 @@
     <div id="fxLayer"></div>
   </div>
 
-  <button class="floatBtn" id="backBtn" aria-label="Back to puzzles" title="Back to puzzles">←</button>
+  <button class="floatBtn" id="backBtn" aria-label="Back to puzzles">←</button>
   <div id="topRight">
-    <button class="floatBtn" id="promptToggle" aria-label="Show or hide the clue" title="Show / hide the clue">☰</button>
+    <button class="floatBtn" id="promptToggle" aria-label="Show / hide the clue">☰</button>
     <button class="floatBtn themeBtn" id="themeBtnPlay" aria-label="Theme">🌗</button>
     <button class="floatBtn" id="muteBtn" aria-label="Toggle sound">🔊</button>
     <button class="floatBtn" id="noHelpBtn" aria-label="Help mode">👼</button>
-    <button class="floatBtn" id="hintBtn" aria-label="Get a hint" title="Get a hint">💡</button>
-    <button class="floatBtn" id="resetBtn" aria-label="Reset puzzle" title="Reset this puzzle">↺</button>
+    <button class="floatBtn" id="hintBtn" aria-label="Get a hint">💡</button>
+    <button class="floatBtn" id="resetBtn" aria-label="Reset this puzzle">↺</button>
   </div>
 
   <div id="promptPanel"><div id="promptDrag" aria-label="Drag clue" title="Drag to move · double-tap to reset"></div><div id="promptText"></div></div>
@@ -292,6 +297,7 @@
   <div id="revealedHints"></div>
 </div>
 <div id="hintToast" hidden><span id="hintToastText"></span><span class="x">✕</span></div>
+<div id="tooltip" role="tooltip" hidden></div>
 
 <script src="puzzles.js"></script>
 <script>
@@ -500,7 +506,7 @@ function openPuzzle(puzzle) {
   el("promptPanel").classList.remove("collapsed");
   el("hintBtn").hidden = !(puzzle.hints && puzzle.hints.length);
   el("muteBtn").textContent = Sound.isMuted() ? "🔇" : "🔊";
-  el("muteBtn").title = Sound.isMuted() ? "Sound off — tap to unmute" : "Sound on — tap to mute";
+  el("muteBtn").setAttribute("aria-label", Sound.isMuted() ? "Sound off — tap to unmute" : "Sound on — tap to mute");
   el("board").classList.remove("shake");   // clear any lingering shake so it doesn't replay on open
   updateNoHelpBtn();
   el("rowBackdrops").innerHTML = ""; el("slotLayer").innerHTML = "";
@@ -1492,7 +1498,7 @@ el("hintBtn").addEventListener("click", openSheet);
 el("bankHandle").addEventListener("click", () => toggleBank());
 el("sheetScrim").addEventListener("click", closeSheet);
 el("hintToast").addEventListener("click", () => { hideToast(); clearHighlights(); });
-el("muteBtn").addEventListener("click", () => { const m = Sound.toggleMute(); el("muteBtn").textContent = m ? "🔇" : "🔊"; el("muteBtn").title = m ? "Sound off — tap to unmute" : "Sound on — tap to mute"; if (!m) { Sound.ensure(); Sound.snap(); } });
+el("muteBtn").addEventListener("click", () => { const m = Sound.toggleMute(); el("muteBtn").textContent = m ? "🔇" : "🔊"; el("muteBtn").setAttribute("aria-label", m ? "Sound off — tap to unmute" : "Sound on — tap to mute"); if (!m) { Sound.ensure(); Sound.snap(); } });
 
 /* -------- "no help" setting: any mistake clears the whole board -------- */
 const NOHELP_KEY = "puzzles-nohelp";
@@ -1503,7 +1509,7 @@ function updateNoHelpBtn() {
   btn.textContent = on ? "😈" : "👼";
   btn.classList.toggle("armed", on);
   const label = on ? "No-help mode on: any mistake clears the whole board" : "Help mode: only wrong tiles pop out";
-  btn.setAttribute("aria-label", label); btn.setAttribute("title", label);
+  btn.setAttribute("aria-label", label);
 }
 el("noHelpBtn").addEventListener("click", () => { localStorage.setItem(NOHELP_KEY, noHelpOn() ? "0" : "1"); updateNoHelpBtn(); });
 el("solvedBanner").addEventListener("click", () => { el("solvedBanner").hidden = true; });
@@ -1562,7 +1568,7 @@ function applyTheme() {
   if (meta) meta.setAttribute("content", eff === "dark" ? "#211d16" : "#e8dec9");
   const icon = pref === "auto" ? "🌗" : pref === "light" ? "☀️" : "🌙";
   const label = `Theme: ${pref} — tap to change`;
-  for (const b of document.querySelectorAll(".themeBtn")) { b.textContent = icon; b.setAttribute("aria-label", label); b.setAttribute("title", label); }
+  for (const b of document.querySelectorAll(".themeBtn")) { b.textContent = icon; b.setAttribute("aria-label", label); }
 }
 function cycleTheme() {
   const order = ["auto", "light", "dark"];
@@ -1572,6 +1578,27 @@ function cycleTheme() {
 for (const b of document.querySelectorAll(".themeBtn")) b.addEventListener("click", cycleTheme);
 if (themeMedia.addEventListener) themeMedia.addEventListener("change", () => { if (themePref() === "auto") applyTheme(); });
 applyTheme();
+
+/* -------- fast tooltips on hover (native title lags; reads live aria-label) -------- */
+const tooltipEl = el("tooltip");
+let tipTimer = 0;
+function hideTip() { clearTimeout(tipTimer); tooltipEl.classList.remove("show"); tooltipEl.hidden = true; }
+for (const btn of document.querySelectorAll(".floatBtn")) {
+  btn.addEventListener("pointerenter", (e) => {
+    if (e.pointerType && e.pointerType !== "mouse") return;
+    const text = btn.getAttribute("aria-label"); if (!text) return;
+    clearTimeout(tipTimer);
+    tipTimer = setTimeout(() => {
+      tooltipEl.textContent = text; tooltipEl.hidden = false;
+      const r = btn.getBoundingClientRect(), tr = tooltipEl.getBoundingClientRect();
+      tooltipEl.style.left = Math.max(6, Math.min(r.left + r.width / 2 - tr.width / 2, window.innerWidth - tr.width - 6)) + "px";
+      tooltipEl.style.top = (r.bottom + 6) + "px";
+      tooltipEl.classList.add("show");
+    }, 130);
+  });
+  btn.addEventListener("pointerleave", hideTip);
+  btn.addEventListener("pointerdown", hideTip);
+}
 
 /* ------------------------------------------------------ routing (hash) */
 // Each puzzle has a shareable URL: .../#/<id>. Ids are stable and spoiler-free,
