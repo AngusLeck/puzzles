@@ -859,7 +859,7 @@ function beginDrag(e, tile) {
   bringUnitToFront(unit);
   for (const tid of unit.tileIds) S.tiles.get(tid).el.classList.add("lifted");
   Sound.pick(); Sound.grindStart();
-  el("board").style.zIndex = "800";   // the dragged tile rides above the tile bank
+  el("tileLayer").style.zIndex = "800";   // tiles ride above the tile bank while dragging
   if (removable) { el("trashZone").classList.add("show"); positionTrash(); }
   deselectSlot();
 }
@@ -896,12 +896,12 @@ function onTilePointerUp(e, tile) {
 }
 
 function unliftUnit(u) { for (const tid of u.tileIds) S.tiles.get(tid)?.el.classList.remove("lifted"); }
-function abortDrag() { Sound.grindStop(); if (S.drag) { const u = S.units.get(S.drag.unitId); if (u) unliftUnit(u); } S.drag = null; S.pending = null; el("trashZone").classList.remove("show", "hot"); el("trashZone").style.bottom = ""; el("board").style.zIndex = ""; }
+function abortDrag() { Sound.grindStop(); if (S.drag) { const u = S.units.get(S.drag.unitId); if (u) unliftUnit(u); } S.drag = null; S.pending = null; el("trashZone").classList.remove("show", "hot"); el("trashZone").style.bottom = ""; el("tileLayer").style.zIndex = ""; }
 
 function endDrag() {
   Sound.grindStop();
   const drag = S.drag, unit = S.units.get(drag.unitId);
-  S.drag = null; S.pending = null; el("trashZone").classList.remove("show", "hot"); el("trashZone").style.bottom = ""; el("board").style.zIndex = "";
+  S.drag = null; S.pending = null; el("trashZone").classList.remove("show", "hot"); el("trashZone").style.bottom = ""; el("tileLayer").style.zIndex = "";
   if (!unit) return;
   unliftUnit(unit);
   if (drag.overTrash && drag.removable) { removeUnit(unit); Sound.remove(); saveBoard(); return; }
@@ -1129,7 +1129,7 @@ function onBankKeyPointerDown(e, letter, keyEl) {
       S.drag = { unitId: unit.id, pointerId, dx: S.layout.tileW / 2, dy: S.layout.tileH / 2, removable: true, samples: [], lastAx: unit.ax, lastAy: unit.ay };
       tile.el.classList.add("lifted"); bringUnitToFront(unit);
       Sound.pick(); Sound.grindStart();
-      el("board").style.zIndex = "800";
+      el("tileLayer").style.zIndex = "800";
       el("trashZone").classList.add("show"); positionTrash();
       deselectSlot();
     }
