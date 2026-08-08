@@ -189,7 +189,7 @@
     width:32px; height:40px; border-radius:9px; font-weight:800; font-size:15px; color:var(--stone-ink);
     background:var(--stone);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.6), 0 0 0 1px var(--stone-edge), 0 2px 4px rgba(var(--shadow),.16);
-    touch-action:manipulation;
+    touch-action:none;
   }
   #bankKeys .key:active{transform:translateY(2px); box-shadow:0 0 0 1px var(--stone-edge), 0 1px 1px rgba(var(--shadow),.16);}
 
@@ -263,7 +263,7 @@
     <button class="floatBtn" id="promptToggle" aria-label="Show or hide clue">☰</button>
     <button class="floatBtn themeBtn" id="themeBtnPlay" aria-label="Theme">🌗</button>
     <button class="floatBtn" id="muteBtn" aria-label="Toggle sound">🔊</button>
-    <button class="floatBtn" id="noHelpBtn" aria-label="Help mode">🛟</button>
+    <button class="floatBtn" id="noHelpBtn" aria-label="Help mode">👼</button>
     <button class="floatBtn" id="hintBtn">💡</button>
     <button class="floatBtn" id="resetBtn" aria-label="Reset puzzle">↺</button>
   </div>
@@ -1075,7 +1075,7 @@ function buildBank() {
   const letters = generator.letters || "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   for (const letter of letters) {
     const key = document.createElement("button"); key.className = "key"; key.textContent = letter;
-    key.addEventListener("click", () => onBankKey(letter));
+    key.addEventListener("pointerdown", (e) => onBankKeyPointerDown(e, letter, key));
     keys.appendChild(key);
   }
 }
@@ -1093,6 +1093,44 @@ function onBankKey(letter) {
   if (S.lock) return;
   Sound.ensure();
   addLetter(letter, false);
+}
+// Press-and-drag a fresh tile straight out of the bank onto the board; a plain
+// tap (no drag) just adds one via onBankKey.
+function onBankKeyPointerDown(e, letter, keyEl) {
+  if (S.lock) return;
+  e.preventDefault(); Sound.ensure();
+  const pointerId = e.pointerId, startX = e.clientX, startY = e.clientY;
+  let unit = null, dragging = false;
+  try { keyEl.setPointerCapture(pointerId); } catch {}
+  const move = (ev) => {
+    if (ev.pointerId !== pointerId) return;
+    if (!dragging) {
+      if (Math.hypot(ev.clientX - startX, ev.clientY - startY) < DRAG_START_DIST) return;
+      dragging = true;
+      S.boardRect = el("board").getBoundingClientRect();
+      const tile = createTile(`gen-${S.genCounter++}`, letter, true);
+      const px = ev.clientX - S.boardRect.left, py = ev.clientY - S.boardRect.top;
+      tile.x = px - S.layout.tileW / 2; tile.y = py - S.layout.tileH / 2; tile.s = 1;
+      unit = createUnit([tile.id], tile.x, tile.y);
+      S.drag = { unitId: unit.id, pointerId, dx: S.layout.tileW / 2, dy: S.layout.tileH / 2, removable: true, samples: [], lastAx: unit.ax, lastAy: unit.ay };
+      tile.el.classList.add("lifted"); bringUnitToFront(unit);
+      Sound.pick(); Sound.grindStart();
+      el("trashZone").classList.add("show");
+      deselectSlot();
+    }
+    const px = ev.clientX - S.boardRect.left, py = ev.clientY - S.boardRect.top;
+    unit.ax = px - S.drag.dx; unit.ay = py - S.drag.dy;
+    S.drag.samples.push({ t: performance.now(), x: px, y: py }); if (S.drag.samples.length > 6) S.drag.samples.shift();
+    const trash = el("trashZone"), tr = trash.getBoundingClientRect();
+    const near = Math.hypot(ev.clientX - (tr.left + tr.width / 2), ev.clientY - (tr.top + tr.height / 2)) < tr.width * 0.9;
+    trash.classList.toggle("hot", near); S.drag.overTrash = near;
+  };
+  const teardown = () => { keyEl.removeEventListener("pointermove", move); keyEl.removeEventListener("pointerup", end); keyEl.removeEventListener("pointercancel", cancel); };
+  const end = (ev) => { if (ev.pointerId !== pointerId) return; teardown(); if (!dragging) onBankKey(letter); else endDrag(); };
+  const cancel = (ev) => { if (ev.pointerId !== pointerId) return; teardown(); if (dragging) abortDrag(); };
+  keyEl.addEventListener("pointermove", move);
+  keyEl.addEventListener("pointerup", end);
+  keyEl.addEventListener("pointercancel", cancel);
 }
 function toggleBank(force) {
   const bank = el("tileBank"); if (bank.hidden) return;
@@ -1118,6 +1156,36 @@ function backspaceUnit() {
   Sound.remove(); updateSelectionUI(); saveBoard();
 }
 
+// A visible resting spot for a randomly-placed tile: within the board but clear
+// of the clue panel (if pinned up top) and the tile bank, and not landing on top
+// of existing tiles where possible.
+function freeSpawnSpot() {
+  const { tileW, tileH, boardW, boardH } = S.layout;
+  const brect = el("board").getBoundingClientRect();
+  let top = 66;
+  const pr = el("promptPanel");
+  if (S.puzzle.prompt && !pr.hidden && !S.promptCollapsed && !S.promptPos) top = Math.max(top, pr.getBoundingClientRect().bottom - brect.top + 10);
+  let bottom = boardH - tileH - 10;
+  const bank = el("tileBank");
+  if (!bank.hidden) bottom = Math.min(bottom, bank.getBoundingClientRect().top - brect.top - tileH - 10);
+  if (bottom < top) bottom = top;
+  let best = { x: boardW / 2 - tileW / 2, y: (top + bottom) / 2 }, bestOv = Infinity;
+  for (let i = 0; i < 30; i++) {
+    const x = 6 + Math.random() * Math.max(1, boardW - tileW - 12);
+    const y = top + Math.random() * Math.max(1, bottom - top);
+    let ov = 0;
+    for (const u of S.units.values()) {
+      const w = unitWidth(u);
+      const ox = Math.min(x + tileW, u.ax + w) - Math.max(x, u.ax);
+      const oy = Math.min(y + tileH, u.ay + tileH) - Math.max(y, u.ay);
+      if (ox > 0 && oy > 0) ov += ox * oy;
+    }
+    if (ov === 0) return { x, y };
+    if (ov < bestOv) { bestOv = ov; best = { x, y }; }
+  }
+  return best;
+}
+
 function spawnLetterTile(letter, pos) {
   if (S.lock) return;
   const { tileW, tileH, boardW, boardH, scatterTop } = S.layout;
@@ -1131,9 +1199,7 @@ function spawnLetterTile(letter, pos) {
     x = clamp(pos.x - tileW / 2 + Math.cos(ang) * rad, 4, boardW - tileW - 4);
     y = clamp(pos.y - tileH / 2 + Math.sin(ang) * rad, 4, boardH - tileH - 4);
   } else {
-    x = boardW / 2 - tileW / 2 + (Math.random() - 0.5) * boardW * 0.4;
-    const top = Math.max(scatterTop, boardH * 0.4);
-    y = clamp(top + Math.random() * Math.max(20, boardH - top - tileH - 90), 4, boardH - tileH - 4);
+    const spot = freeSpawnSpot(); x = spot.x; y = spot.y;
   }
   const unit = createUnit([tile.id], x, y);
   tile.x = unit.ax; tile.y = unit.ay; tile.s = 0.2; tile.pulseAt = performance.now();
@@ -1413,7 +1479,7 @@ function noHelpOn() { return localStorage.getItem(NOHELP_KEY) === "1"; }
 function updateNoHelpBtn() {
   const btn = el("noHelpBtn"); if (!btn) return;
   const on = noHelpOn();
-  btn.textContent = on ? "🚫" : "🛟";
+  btn.textContent = on ? "😈" : "👼";
   btn.classList.toggle("armed", on);
   const label = on ? "No-help mode on: any mistake clears the whole board" : "Help mode: only wrong tiles pop out";
   btn.setAttribute("aria-label", label); btn.setAttribute("title", label);
