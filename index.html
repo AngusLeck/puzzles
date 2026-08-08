@@ -159,6 +159,8 @@
   @keyframes bannerIn{from{transform:translate(-50%,10px) scale(.96); opacity:0;}}
   #solvedBanner .chip{font-size:12px; font-weight:700; padding:3px 10px; border-radius:99px; color:#2b2317;}
   #solvedBanner .muted{font-weight:500; color:var(--ink-soft); font-size:13px;}
+  #solvedBanner{cursor:pointer; padding-right:30px;}
+  #solvedBanner .bx{position:absolute; top:7px; right:11px; opacity:.55; font-size:15px; font-weight:700;}
   .rowBackdrop{position:absolute; border-radius:14px; opacity:.5;}
 
   /* ---------- roll-up tile bank ---------- */
@@ -261,6 +263,7 @@
     <button class="floatBtn" id="promptToggle" aria-label="Show or hide clue">☰</button>
     <button class="floatBtn themeBtn" id="themeBtnPlay" aria-label="Theme">🌗</button>
     <button class="floatBtn" id="muteBtn" aria-label="Toggle sound">🔊</button>
+    <button class="floatBtn" id="noHelpBtn" aria-label="Help mode">🛟</button>
     <button class="floatBtn" id="hintBtn">💡</button>
     <button class="floatBtn" id="resetBtn" aria-label="Reset puzzle">↺</button>
   </div>
@@ -490,6 +493,8 @@ function openPuzzle(puzzle) {
   el("promptPanel").classList.remove("collapsed");
   el("hintBtn").hidden = !(puzzle.hints && puzzle.hints.length);
   el("muteBtn").textContent = Sound.isMuted() ? "🔇" : "🔊";
+  el("board").classList.remove("shake");   // clear any lingering shake so it doesn't replay on open
+  updateNoHelpBtn();
   el("rowBackdrops").innerHTML = ""; el("slotLayer").innerHTML = "";
   el("tileLayer").innerHTML = ""; el("fxLayer").innerHTML = "";
   renderPrompt([]);
@@ -1215,7 +1220,7 @@ function maybeCheckSolution(options = {}) {
     const board = el("board"); board.classList.remove("shake"); void board.offsetWidth; board.classList.add("shake");
     Sound.bad();
     S.mistakes++;                 // each distinct wrong full board is one mistake
-    shakeLooseWrongTiles();
+    if (noHelpOn()) shakeLooseAllTiles(); else shakeLooseWrongTiles();
     saveBoard();
   }
 }
@@ -1246,9 +1251,13 @@ function shakeLooseWrongTiles() {
       }
     }
   }
-  if (!wrongIds.size) return;
-  for (const id of wrongIds) {
-    const tile = S.tiles.get(id); if (!tile) continue;
+  ejectTiles([...wrongIds].map((id) => S.tiles.get(id)));
+}
+
+// Pop a set of tiles a little way out of their slots with a small jolt.
+function ejectTiles(tiles) {
+  const list = tiles.filter(Boolean);
+  for (const tile of list) {
     const slot = S.slots.get(tile.slotId);
     if (slot) slot.tileId = null;
     tile.slotId = null;
@@ -1257,7 +1266,12 @@ function shakeLooseWrongTiles() {
     unit.vx = (Math.random() - 0.5) * 4; unit.vy = 1.5 + Math.random() * 2;   // a small jolt
     bringUnitToFront(unit);
   }
-  S.lastCheckSignature = null; updateSelectionUI(); saveBoard();
+  if (list.length) { S.lastCheckSignature = null; updateSelectionUI(); saveBoard(); }
+}
+
+// "No help" mode: any mistake ejects every placed tile, right or wrong.
+function shakeLooseAllTiles() {
+  ejectTiles([...S.slots.values()].filter((s) => s.tileId).map((s) => S.tiles.get(s.tileId)));
 }
 
 function onSolved(celebrate) {
@@ -1273,9 +1287,9 @@ function onSolved(celebrate) {
       .map(({ categoryIndex }) => `<span class="chip" style="background:${CATEGORY_COLORS[categoryIndex % CATEGORY_COLORS.length]}">${escapeHtml(check.categories[categoryIndex].label || "")}</span>`).join("");
   }
   const stat = (n, word) => (n ? `${n} ${word}${n > 1 ? "s" : ""}` : `no ${word}s`);
-  banner.innerHTML = `🎉 Solved! ${chips}<span class="muted">${stat(hintsUsed, "hint")} · ${stat(mistakes, "mistake")}</span>`;
+  banner.innerHTML = `🎉 Solved! ${chips}<span class="muted">${stat(hintsUsed, "hint")} · ${stat(mistakes, "mistake")}</span><span class="bx" aria-hidden="true">✕</span>`;
   banner.hidden = false;
-  el("promptPanel").classList.add("collapsed");
+  S.promptCollapsed = false; el("promptPanel").classList.remove("collapsed");   // keep the clue on screen to admire
   if (celebrate) {
     const placed = [...S.slots.values()].filter((s) => s.tileId).sort((a, b) => (a.py - b.py) || (a.px - b.px)).map((s) => S.tiles.get(s.tileId));
     const now = performance.now();
@@ -1392,6 +1406,20 @@ el("bankHandle").addEventListener("click", () => toggleBank());
 el("sheetScrim").addEventListener("click", closeSheet);
 el("hintToast").addEventListener("click", () => { hideToast(); clearHighlights(); });
 el("muteBtn").addEventListener("click", () => { const m = Sound.toggleMute(); el("muteBtn").textContent = m ? "🔇" : "🔊"; if (!m) { Sound.ensure(); Sound.snap(); } });
+
+/* -------- "no help" setting: any mistake clears the whole board -------- */
+const NOHELP_KEY = "puzzles-nohelp";
+function noHelpOn() { return localStorage.getItem(NOHELP_KEY) === "1"; }
+function updateNoHelpBtn() {
+  const btn = el("noHelpBtn"); if (!btn) return;
+  const on = noHelpOn();
+  btn.textContent = on ? "🚫" : "🛟";
+  btn.classList.toggle("armed", on);
+  const label = on ? "No-help mode on: any mistake clears the whole board" : "Help mode: only wrong tiles pop out";
+  btn.setAttribute("aria-label", label); btn.setAttribute("title", label);
+}
+el("noHelpBtn").addEventListener("click", () => { localStorage.setItem(NOHELP_KEY, noHelpOn() ? "0" : "1"); updateNoHelpBtn(); });
+el("solvedBanner").addEventListener("click", () => { el("solvedBanner").hidden = true; });
 el("promptToggle").addEventListener("click", () => { S.promptCollapsed = !S.promptCollapsed; el("promptPanel").classList.toggle("collapsed", S.promptCollapsed); });
 
 /* -------- draggable / hideable floating clue panel -------- */
