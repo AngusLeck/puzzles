@@ -7,7 +7,7 @@ window.PUZZLES = [
   // --------------------------------------------------------------- cryptics
   {
     id: "cryptic-1",
-    title: "Cryptic №1",
+    title: "If you don't like it you can too!",
     attribution: "AD",
     prompt: 'I would, I am - shortly, going to "suck an egg" as they say. (5)',
     tileGenerator: { type: "letters" },
@@ -45,7 +45,7 @@ window.PUZZLES = [
 
   {
     id: "cryptic-2",
-    title: "Cryptic №2",
+    title: "Stew on this!",
     attribution: "RAD",
     prompt: "Cough heard by overzealous sheep shearer, making bean stew? (6)",
     tileGenerator: { type: "letters" },
@@ -84,7 +84,7 @@ window.PUZZLES = [
 
   {
     id: "cryptic-3",
-    title: "Cryptic №3",
+    title: "Tell me I'm wrong",
     attribution: "AD",
     prompt: "Delayed again, means drizzle on fourth station? (5)",
     tileGenerator: { type: "letters" },
@@ -122,7 +122,7 @@ window.PUZZLES = [
 
   {
     id: "cryptic-4",
-    title: "Cryptic №4",
+    title: "Mathematician avoids tank",
     attribution: "APD",
     prompt: "Fibonacci silently crept about armoured vehicle. (3)",
     tileGenerator: { type: "letters" },
@@ -153,7 +153,7 @@ window.PUZZLES = [
 
   {
     id: "cryptic-5",
-    title: "Cryptic №5",
+    title: "Coming to peace with a republic?",
     attribution: "APD",
     prompt:
       'King David the 5th, stripped of his title. Exclaimed "!&~#" initially. Got there in the end? (5)',
@@ -199,7 +199,7 @@ window.PUZZLES = [
 
   {
     id: "cryptic-6",
-    title: "Cryptic №6",
+    title: "Something doesn't add up",
     attribution: "APD",
     prompt: "CFO fudged the numbers, wrote 5 - 4 + 50 / y? (6)",
     tileGenerator: { type: "letters" },
@@ -243,7 +243,7 @@ window.PUZZLES = [
 
   {
     id: "cryptic-7",
-    title: "Cryptic №7",
+    title: "Injustice",
     attribution: "RAD",
     prompt: "Charges dropped against employer over wage theft allegations. (9)",
     tileGenerator: { type: "letters" },
@@ -304,7 +304,7 @@ window.PUZZLES = [
 
   {
     id: "cryptic-8",
-    title: "Cryptic №8",
+    title: "Dad's a bit deaf",
     attribution: "AD",
     releaseDate: "2026-08-14",
     prompt: "Tilting his head - dad eyed listening device. (4)",
@@ -339,7 +339,7 @@ window.PUZZLES = [
 
   {
     id: "cryptic-9",
-    title: "Cryptic №9",
+    title: "EGG",
     attribution: "RD",
     prompt: "Where the egg is, no one knows. (6)",
     tileGenerator: { type: "letters" },
@@ -357,6 +357,44 @@ window.PUZZLES = [
         size: "small",
         text: "You can't make a clue without breaking a few eggs, just give it a go - have faith!",
         highlight: {},
+      },
+    ],
+  },
+
+  {
+    id: "cryptic-10",
+    title: "Pranked the florist",
+    attribution: "AAA!",
+    prompt: "Shallot used to conceal flower. (5)",
+    tileGenerator: { type: "letters" },
+    slots: [
+      { id: "s1", x: 0, y: 0 },
+      { id: "s2", x: 1, y: 0 },
+      { id: "s3", x: 2, y: 0 },
+      { id: "s4", x: 3, y: 0 },
+      { id: "s5", x: 4, y: 0 },
+    ],
+    checks: [
+      {
+        type: "slots",
+        answers: { s1: "L", s2: "O", s3: "T", s4: "U", s5: "S" },
+      },
+    ],
+    hints: [
+      {
+        size: "definition",
+        text: '"flower" is the definition.',
+        highlight: { prompt: ["flower"] },
+      },
+      {
+        size: "wordplay",
+        text: "Our indicator tells us to find the answer concealed within some neighboring fodder.",
+        highlight: { prompt: ["conceal"] },
+      },
+      {
+        size: "fodder",
+        text: 'our fodder is "shallot used".',
+        highlight: { prompt: ["shallot used"] },
       },
     ],
   },
