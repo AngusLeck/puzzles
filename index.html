@@ -129,10 +129,10 @@
   }
   .floatBtn:active{transform:translateY(1px);}
   @media (hover:hover){
-    .floatBtn:hover{background:var(--card); box-shadow:0 3px 12px -2px rgba(0,0,0,.32);}
-    .puzzleCard:hover{transform:translateY(-1px); box-shadow:0 2px 4px rgba(0,0,0,.06), 0 10px 24px -8px rgba(0,0,0,.2);}
-    #bankKeys .key:hover{transform:translateY(-1px);}
-    .hintButtons .hbtn:hover{border-color:var(--ink-soft);}
+    /* keep hover cheap to paint — border/brightness only. Changing box-shadow or
+       background re-runs the backdrop-filter blur and feels laggy. */
+    .floatBtn:hover, .hintButtons .hbtn:hover, .puzzleCard:hover{border-color:var(--accent);}
+    .floatBtn:hover, #bankKeys .key:hover{filter:brightness(1.05);}
   }
   .floatBtn.armed{background:var(--accent); border-color:var(--accent); color:var(--accent-ink);}
   #backBtn{left:calc(10px + env(safe-area-inset-left)); top:calc(10px + env(safe-area-inset-top));}
