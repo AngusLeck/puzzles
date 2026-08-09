@@ -158,6 +158,7 @@
   #promptDrag:active{cursor:grabbing;}
   #promptText{padding:2px 14px 12px; font-size:14.5px; line-height:1.45; white-space:pre-line; max-height:32dvh; overflow:auto;}
   #promptText mark{background:var(--glow); color:#3a2f00; border-radius:4px; padding:0 3px;}
+  #promptText sup, #promptText sub{font-size:0.75em; line-height:0;}
   #promptText .attribution{display:block; text-align:right; color:var(--ink-soft); font-size:12px; font-style:italic; margin-top:8px;}
 
   #solvedBanner{
@@ -1465,17 +1466,49 @@ function applyHint(hint) {
 }
 function clearHighlights() { clearTimeout(S.highlightTimer); for (const e of S.glowingEls) e.classList.remove("glow"); S.glowingEls = []; if (S.open) renderPrompt([]); }
 
+// Parse author markup for super/subscripts: `^{...}` -> superscript, `_{...}` -> subscript.
+// Returns the display string with the markers stripped out, plus the character ranges
+// (over the display string) that should be wrapped in <sup>/<sub>. Highlighting and
+// escaping downstream operate on the display string, so authors write both the prompt
+// markup and hint substrings against the text as it reads.
+function parseRichText(src) {
+  let display = "";
+  const runs = [];
+  const re = /([\^_])\{([^}]*)\}/g;
+  let last = 0, match;
+  while ((match = re.exec(src))) {
+    display += src.slice(last, match.index);
+    const start = display.length;
+    display += match[2];
+    runs.push([start, display.length, match[1] === "^" ? "sup" : "sub"]);
+    last = re.lastIndex;
+  }
+  display += src.slice(last);
+  return { display, runs };
+}
+
 function renderPrompt(marks) {
-  const text = S.puzzle && S.puzzle.prompt ? S.puzzle.prompt : "";
-  const lower = text.toLowerCase(), ranges = [];
-  for (const mark of marks) { const idx = lower.indexOf(String(mark).toLowerCase()); if (idx >= 0) ranges.push([idx, idx + mark.length]); }
-  ranges.sort((a, b) => a[0] - b[0]);
-  let html = "", cursor = 0;
-  for (const [start, end] of ranges) { if (start < cursor) continue; html += escapeHtml(text.slice(cursor, start)) + "<mark>" + escapeHtml(text.slice(start, end)) + "</mark>"; cursor = end; }
-  html += escapeHtml(text.slice(cursor));
+  const src = S.puzzle && S.puzzle.prompt ? S.puzzle.prompt : "";
+  const { display, runs } = parseRichText(src);
+  const lower = display.toLowerCase();
+  const marked = new Array(display.length).fill(false);
+  for (const mark of marks) { const idx = lower.indexOf(String(mark).toLowerCase()); if (idx >= 0) for (let i = idx; i < idx + mark.length; i++) marked[i] = true; }
+  const scriptTag = new Array(display.length).fill("");
+  for (const [start, end, tag] of runs) for (let i = start; i < end; i++) scriptTag[i] = tag;
+  let html = "", i = 0;
+  while (i < display.length) {
+    const tag = scriptTag[i], isMarked = marked[i];
+    let j = i;
+    while (j < display.length && scriptTag[j] === tag && marked[j] === isMarked) j++;
+    let chunk = escapeHtml(display.slice(i, j));
+    if (isMarked) chunk = "<mark>" + chunk + "</mark>";
+    if (tag) chunk = "<" + tag + ">" + chunk + "</" + tag + ">";
+    html += chunk;
+    i = j;
+  }
   if (S.puzzle && S.puzzle.attribution) html += `<span class="attribution">— ${escapeHtml(S.puzzle.attribution)}</span>`;
   el("promptText").innerHTML = html;
-  el("promptPanel").hidden = !text;
+  el("promptPanel").hidden = !display;
 }
 function showToast(text) { el("hintToastText").textContent = text; el("hintToast").hidden = false; }
 function hideToast() { el("hintToast").hidden = true; }

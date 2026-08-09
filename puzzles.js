@@ -671,6 +671,68 @@ window.PUZZLES = [
     ],
   },
 
+  // ------------------------------------------------------- octonions crossword
+  {
+    id: "crossword-2",
+    title: "Octonions Cross",
+    subtitle: "One clue, so far — more to come",
+    attribution: "AD",
+    // Reads as "octonions choose 4": ⁿCᵣ notation with the octonions symbol 𝕆 (U+1D546)
+    // as n and 4 as r. ^{…} / _{…} become <sup>/<sub> via parseRichText (see index.html).
+    prompt: "ACROSS\n1. ^{𝕆}C_{4}?! (4)",
+    tileGenerator: { type: "letters" },
+    slots: [
+      { id: "c0r0", x: 0, y: 0, label: "1" },
+      { id: "c1r0", x: 1, y: 0 },
+      { id: "c2r0", x: 2, y: 0 },
+      { id: "c3r0", x: 3, y: 0 },
+    ],
+    checks: [
+      {
+        type: "slots",
+        answers: {
+          c0r0: "T",
+          c1r0: "O",
+          c2r0: "N",
+          c3r0: "S",
+        },
+      },
+    ],
+    hints: [
+      {
+        size: "definition",
+        text: "The whole clue is the definition.",
+        highlight: {
+          prompt: ["𝕆C4?!"],
+          slots: ["c0r0", "c1r0", "c2r0", "c3r0"],
+        },
+      },
+      {
+        size: "wordplay",
+        text: "C_{4} is the indicator.",
+        highlight: {
+          prompt: ["C4"],
+          slots: ["c0r0", "c1r0", "c2r0", "c3r0"],
+        },
+      },
+      {
+        size: "fodder",
+        text: "The fodder is 𝕆 — the octonions.",
+        highlight: {
+          prompt: ["𝕆"],
+          slots: ["c0r0", "c1r0", "c2r0", "c3r0"],
+        },
+      },
+      {
+        size: "bonus",
+        text: "It can be read as \"octonions choose 4\".",
+        highlight: {
+          slots: ["c0r0", "c1r0", "c2r0", "c3r0"],
+        },
+      },
+    ],
+  },
+
   // ------------------------------------------------------- format demos
   {
     id: "connections-1",
