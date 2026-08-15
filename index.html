@@ -455,16 +455,29 @@ function persistAllProgress() { try { localStorage.setItem(STORAGE_KEY, JSON.str
 function puzzleProgress(p) { return S.progressAll[p.id] || {}; }
 
 /* ------------------------------------------------------------ list view */
-function isReleased(p) {
-  if (!p.releaseDate) return true;
+function todayLocal() {
   const now = new Date();
-  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  return p.releaseDate <= today;
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
+function isReleased(p) { return !p.releaseDate || p.releaseDate <= todayLocal(); }
+// `expiryDate` is the last local date a puzzle is available, inclusive.
+function hasClosed(p) { return !!p.expiryDate && p.expiryDate < todayLocal(); }
+// An expiryDate marks a puzzle as a timed drop, and a timed drop's window is
+// enforced at both ends — including on direct links, which otherwise let you
+// preview a puzzle before its release date (see applyRoute).
+function isPlayable(p) { return p.expiryDate ? isReleased(p) && !hasClosed(p) : true; }
+// `unlisted` puzzles never show up while browsing: they're shared by link only.
+function isListed(p) { return !p.unlisted && !hasClosed(p); }
+
+// Set by applyRoute when a link points at a puzzle that isn't open; shown once
+// on the list view in place of the "more coming" note.
+let routeNotice = "";
+
 function renderList() {
   const listEl = el("puzzleList"); listEl.innerHTML = "";
-  const released = PUZZLES.filter(isReleased);
-  const upcoming = PUZZLES.filter((p) => !isReleased(p)).sort((a, b) => a.releaseDate.localeCompare(b.releaseDate));
+  const listed = PUZZLES.filter(isListed);
+  const released = listed.filter(isReleased);
+  const upcoming = listed.filter((p) => !isReleased(p)).sort((a, b) => a.releaseDate.localeCompare(b.releaseDate));
   for (const p of released) {
     const progress = puzzleProgress(p);
     const card = document.createElement("button"); card.className = "puzzleCard";
@@ -475,6 +488,7 @@ function renderList() {
     if (hintsUsed) badges.push(`<span class="badge">💡 ${hintsUsed} hint${hintsUsed > 1 ? "s" : ""} used</span>`);
     if (mistakes) badges.push(`<span class="badge">✗ ${mistakes} mistake${mistakes > 1 ? "s" : ""}</span>`);
     if (p.releaseDate) badges.push(`<span class="badge">${p.releaseDate}</span>`);
+    if (p.expiryDate) badges.push(`<span class="badge">until ${p.expiryDate}</span>`);
     if (p.attribution) badges.push(`<span class="badge">by ${escapeHtml(p.attribution)}</span>`);
     card.innerHTML = `<div class="cardTitle">${escapeHtml(p.title || p.id)}</div>
       ${p.subtitle ? `<div class="cardSub">${escapeHtml(p.subtitle)}</div>` : ""}
@@ -483,7 +497,8 @@ function renderList() {
     listEl.appendChild(card);
   }
   const note = el("upcomingNote");
-  if (upcoming.length) { note.hidden = false; note.textContent = `${upcoming.length} more puzzle${upcoming.length > 1 ? "s" : ""} coming — next on ${upcoming[0].releaseDate}.`; }
+  if (routeNotice) { note.hidden = false; note.textContent = routeNotice; routeNotice = ""; }
+  else if (upcoming.length) { note.hidden = false; note.textContent = `${upcoming.length} more puzzle${upcoming.length > 1 ? "s" : ""} coming — next on ${upcoming[0].releaseDate}.`; }
   else note.hidden = true;
   if (!released.length) listEl.innerHTML = `<p class="upcomingNote">No puzzles released yet.</p>`;
 }
@@ -1639,9 +1654,12 @@ for (const btn of document.querySelectorAll(".floatBtn")) {
 // config, which suits GitHub Pages.
 function applyRoute() {
   const id = decodeURIComponent((location.hash || "").replace(/^#\/?/, ""));
-  // A direct link opens any puzzle, released or not (the list still hides
-  // unreleased ones from browsing) — handy for sharing a preview early.
-  const puzzle = id ? PUZZLES.find((p) => p.id === id) : null;
+  // A direct link opens any puzzle the list hides from browsing — an unreleased
+  // one (handy for sharing a preview early) or an `unlisted` link-only drop.
+  // The exception is a timed puzzle outside its window: that stays shut.
+  const match = id ? PUZZLES.find((p) => p.id === id) : null;
+  const puzzle = match && isPlayable(match) ? match : null;
+  if (match && !puzzle) routeNotice = hasClosed(match) ? "That puzzle has closed." : "That puzzle isn't open yet.";
   if (puzzle) {
     if (!S.open || !S.puzzle || S.puzzle.id !== puzzle.id) openPuzzle(puzzle);
   } else {
