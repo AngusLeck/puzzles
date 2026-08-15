@@ -27,13 +27,8 @@ Player progress (solves, hints revealed, board state) is kept in
                                  //   so keep it neutral/spoiler-free and don't rename it
   "title": "Mini Cryptic №1",    // shown in the list and puzzle header
   "subtitle": "optional blurb",  // shown on the list card
-  "releaseDate": "2026-12-25",   // optional; puzzle is hidden from the list until
-                                 //   this local date (a direct link still previews it)
-  "expiryDate": "2026-12-26",    // optional; last local date it's available, inclusive.
-                                 //   Having one makes the puzzle a *timed drop*: the
-                                 //   window is enforced on direct links too, at both
-                                 //   ends, and once past it the link says "closed"
-  "unlisted": true,              // optional; never appears while browsing — link only
+  "releaseDate": "2026-12-25",   // optional; puzzle is off the list until this local date
+  "expiryDate": "2026-12-26",    // optional; last local date on the list, inclusive
   "attribution": "RAD",          // optional author credit (list badge + "— RAD" under the prompt)
   "prompt": "ACROSS\n1. ...",    // plain text, newlines respected
 
@@ -96,21 +91,19 @@ Player progress (solves, hints revealed, board state) is kept in
 
 ## Release mechanics
 
-Three independent switches, combinable:
+`releaseDate` and `expiryDate` bracket the window a puzzle spends **on the
+list**: it appears on the release date and rolls off after the expiry date
+(inclusive). Either can be left out for an open-ended end.
 
-- `releaseDate` — keeps a puzzle off the list until the date, but a direct link
-  still opens it, so you can share a preview before it goes public.
-- `expiryDate` — the last day it's available. Adding one turns the puzzle into a
-  **timed drop**, and a timed drop's window is enforced on direct links too (at
-  both ends), so it can't be played early or after it closes.
-- `unlisted` — never shown while browsing, at any time. Link only.
+Both are about browsing only. **Every puzzle is always reachable at its own
+`#/<id>` link** — before its release, after its run has ended, forever. So a
+weekend drop is `releaseDate` on the Saturday and `expiryDate` on the Sunday:
+it's on the front page for those two days, and anyone who kept the link can
+still play it next year. Links never rot, which is also why ids need to stay
+stable.
 
-A weekend-only, link-only clue is all three together: `unlisted: true` with
-`releaseDate` on the Saturday and `expiryDate` on the Sunday. Once the window
-passes, the link lands on the list with "That puzzle has closed."
-
-Dates are compared against the *player's* local date, so a drop opens and closes
-at each player's own midnight.
+Dates are compared against the *player's* local date, so a drop appears and
+disappears at each player's own midnight.
 
 Checks compose: a puzzle can mix `slots` and `categories` checks (or gain new
 check types later) without the engine knowing anything about "crosswords" or
@@ -145,6 +138,7 @@ slots with a snap.
   a roll for the bank, and a grainy grind while dragging (subtle across the board,
   deeper against other tiles). Toggle with the 🔊 button (persisted).
 - **Theme**: the 🌗/☀️/🌙 button cycles Auto → Light → Dark (persisted); Auto
-  follows the OS. Available on the list and in-puzzle.
+  follows the OS. Available on the list and in-puzzle. Defaults to Light even on
+  a dark-mode OS, until the player picks something.
 - The puzzle auto-checks whenever every slot is filled: wrong shakes, right
   celebrates.

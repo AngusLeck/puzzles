@@ -399,12 +399,12 @@ window.PUZZLES = [
     ],
   },
 
-  // A weekend-only drop: unlisted, so it's reachable by direct link alone, and
-  // the release/expiry pair keeps that link live for Sat–Sun only.
+  // A weekend drop: on the list for Sat–Sun only, then it rolls off. The link
+  // keeps working forever.
   {
     id: "cryptic-11",
     title: "Melbourne is too cold anyway",
-    unlisted: true,
+    attribution: "AD",
     releaseDate: "2026-08-15",
     expiryDate: "2026-08-16",
     prompt: "Flotsam mysteriously housed welcome visitor (5)",

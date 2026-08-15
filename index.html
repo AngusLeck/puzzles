@@ -245,7 +245,7 @@
   // Set the theme attribute before first paint to avoid a flash.
   (function () {
     try {
-      var pref = localStorage.getItem("puzzles-theme") || "auto";
+      var pref = localStorage.getItem("puzzles-theme") || "light";   // keep in sync with THEME_DEFAULT
       var dark = pref === "dark" || (pref === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
       document.documentElement.dataset.theme = dark ? "dark" : "light";
     } catch (e) { document.documentElement.dataset.theme = "light"; }
@@ -460,24 +460,17 @@ function todayLocal() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 function isReleased(p) { return !p.releaseDate || p.releaseDate <= todayLocal(); }
-// `expiryDate` is the last local date a puzzle is available, inclusive.
+// `expiryDate` is the last local date a puzzle is listed, inclusive. Both dates
+// only ever govern what's on show while browsing — every puzzle stays reachable
+// forever at its own link (see applyRoute), so a drop that's rolled off the list
+// is still playable by anyone who kept the URL.
 function hasClosed(p) { return !!p.expiryDate && p.expiryDate < todayLocal(); }
-// An expiryDate marks a puzzle as a timed drop, and a timed drop's window is
-// enforced at both ends — including on direct links, which otherwise let you
-// preview a puzzle before its release date (see applyRoute).
-function isPlayable(p) { return p.expiryDate ? isReleased(p) && !hasClosed(p) : true; }
-// `unlisted` puzzles never show up while browsing: they're shared by link only.
-function isListed(p) { return !p.unlisted && !hasClosed(p); }
-
-// Set by applyRoute when a link points at a puzzle that isn't open; shown once
-// on the list view in place of the "more coming" note.
-let routeNotice = "";
 
 function renderList() {
   const listEl = el("puzzleList"); listEl.innerHTML = "";
-  const listed = PUZZLES.filter(isListed);
-  const released = listed.filter(isReleased);
-  const upcoming = listed.filter((p) => !isReleased(p)).sort((a, b) => a.releaseDate.localeCompare(b.releaseDate));
+  const current = PUZZLES.filter((p) => !hasClosed(p));
+  const released = current.filter(isReleased);
+  const upcoming = current.filter((p) => !isReleased(p)).sort((a, b) => a.releaseDate.localeCompare(b.releaseDate));
   for (const p of released) {
     const progress = puzzleProgress(p);
     const card = document.createElement("button"); card.className = "puzzleCard";
@@ -497,8 +490,7 @@ function renderList() {
     listEl.appendChild(card);
   }
   const note = el("upcomingNote");
-  if (routeNotice) { note.hidden = false; note.textContent = routeNotice; routeNotice = ""; }
-  else if (upcoming.length) { note.hidden = false; note.textContent = `${upcoming.length} more puzzle${upcoming.length > 1 ? "s" : ""} coming — next on ${upcoming[0].releaseDate}.`; }
+  if (upcoming.length) { note.hidden = false; note.textContent = `${upcoming.length} more puzzle${upcoming.length > 1 ? "s" : ""} coming — next on ${upcoming[0].releaseDate}.`; }
   else note.hidden = true;
   if (!released.length) listEl.innerHTML = `<p class="upcomingNote">No puzzles released yet.</p>`;
 }
@@ -1607,7 +1599,10 @@ resetButton.addEventListener("click", () => {
 /* ------------------------------------------------------------- theme */
 const THEME_KEY = "puzzles-theme";
 const themeMedia = window.matchMedia("(prefers-color-scheme: dark)");
-function themePref() { return localStorage.getItem(THEME_KEY) || "auto"; }
+// Light by default, whatever the OS says — the board art is drawn for it. Auto
+// is still one tap away for anyone who wants to follow their system.
+const THEME_DEFAULT = "light";
+function themePref() { return localStorage.getItem(THEME_KEY) || THEME_DEFAULT; }
 function effectiveTheme() { const p = themePref(); return p === "auto" ? (themeMedia.matches ? "dark" : "light") : p; }
 function applyTheme() {
   const pref = themePref(), eff = effectiveTheme();
@@ -1654,12 +1649,10 @@ for (const btn of document.querySelectorAll(".floatBtn")) {
 // config, which suits GitHub Pages.
 function applyRoute() {
   const id = decodeURIComponent((location.hash || "").replace(/^#\/?/, ""));
-  // A direct link opens any puzzle the list hides from browsing — an unreleased
-  // one (handy for sharing a preview early) or an `unlisted` link-only drop.
-  // The exception is a timed puzzle outside its window: that stays shut.
-  const match = id ? PUZZLES.find((p) => p.id === id) : null;
-  const puzzle = match && isPlayable(match) ? match : null;
-  if (match && !puzzle) routeNotice = hasClosed(match) ? "That puzzle has closed." : "That puzzle isn't open yet.";
+  // A direct link opens any puzzle, whatever the list is showing — one that
+  // hasn't been released yet (handy for sharing a preview early) or one whose
+  // run has ended. Links never rot.
+  const puzzle = id ? PUZZLES.find((p) => p.id === id) : null;
   if (puzzle) {
     if (!S.open || !S.puzzle || S.puzzle.id !== puzzle.id) openPuzzle(puzzle);
   } else {
