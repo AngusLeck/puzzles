@@ -689,12 +689,7 @@ window.PUZZLES = [
       {
         size: "bonus",
         text: "This clue requires an unprompted substitution (sorry!)",
-        highlight: { prompt: ["Angus D"] },
-      },
-      {
-        size: "bonus",
-        text: "Swap the first word of the fodder for something you might buy at a butcher.",
-        highlight: { prompt: ["Angus"] },
+        highlight: {},
       },
     ],
   },
