@@ -307,6 +307,30 @@ describe("Engine: letter puzzle (cryptic-1)", () => {
     expect(new Set(unitZ).size).toBe(unitZ.length);
   });
 
+  it("places restored tiles at their targets on the first measured resize", () => {
+    // Play a move so there is a saved board, then reload it at a different size.
+    h.engine.addLetter("A", false);
+    h.frames(60);
+    const reloaded = new Engine({
+      puzzle: cryptic1,
+      progress: h.progress,
+      random: seeded(7),
+      now: () => h.clock.t,
+      onEvent: () => {},
+    });
+    reloaded.resize(800, 900);
+    for (const tile of reloaded.tiles.values()) {
+      const unit = tile.unitId != null ? reloaded.units.get(tile.unitId) : undefined;
+      const slot = tile.slotId ? [...reloaded.slots.values()].find((s) => s.id === tile.slotId) : undefined;
+      if (slot) {
+        expect(tile.x).toBeCloseTo(slot.px, 5);
+        expect(tile.y).toBeCloseTo(slot.py, 5);
+      } else if (unit) {
+        expect(tile.y).toBeCloseTo(unit.ay, 5);
+      }
+    }
+  });
+
   it("keeps loose tiles in proportion on resize", () => {
     h.engine.addLetter("A", false);
     const u = [...h.engine.units.values()][0]!;
