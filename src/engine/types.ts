@@ -13,9 +13,6 @@ export interface Layout {
   pitchY: number;
   offsetX: number;
   offsetY: number;
-  /** Band below the slot grid where a fixed tile set is dealt. */
-  scatterTop: number;
-  scatterBottom: number;
 }
 
 export interface SlotState {

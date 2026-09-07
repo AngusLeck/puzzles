@@ -50,8 +50,6 @@ export function computeLayout(puzzle: Puzzle, boardW: number, boardH: number): L
     pitchY,
     offsetX,
     offsetY,
-    scatterTop: offsetY + gridH + 16,
-    scatterBottom: boardH - bankInset - tileH - 8,
   };
 }
 

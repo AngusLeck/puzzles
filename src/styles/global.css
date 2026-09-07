@@ -212,13 +212,11 @@ button {
   z-index: 2000;
 }
 /* tileLayer spans the board but must not swallow taps aimed at slots beneath
-   it; only the tiles themselves are interactive. */
+   it; only the tiles themselves are interactive. It deliberately has no
+   z-index (so no stacking context): each tile carries its own z, and only the
+   dragged one is lifted above the clue and tile bank. */
 .tileLayer {
-  z-index: 10;
   pointer-events: none;
-}
-.tileLayer.dragging {
-  z-index: 800; /* tiles ride above the tile bank while dragging */
 }
 .slotLayer {
   z-index: 2;

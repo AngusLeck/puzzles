@@ -288,6 +288,25 @@ describe("Engine: letter puzzle (cryptic-1)", () => {
     expect(h.progress.get("cryptic-1").board?.gen).toEqual([]);
   });
 
+  it("keeps loose z-indexes compact under the chrome however many times tiles are lifted", () => {
+    for (let i = 0; i < 40; i++) h.engine.addLetter("A", false);
+    const ids = h.engine.getSnapshot().tiles.map((t) => t.id);
+    for (let round = 0; round < 15; round++)
+      for (const id of ids) {
+        const t = h.engine.tiles.get(id)!;
+        h.clock.t += 1000;
+        h.engine.tilePointerDown(id, 1, t.x + 2, t.y + 2);
+        h.engine.pointerMove(1, t.x + 40, t.y + 40);
+        h.clock.t += 200;
+        h.engine.pointerUp(1);
+      }
+    const zs = [...h.engine.tiles.values()].map((t) => t.z);
+    expect(Math.max(...zs)).toBeLessThan(500);
+    // Units (tiles may have chained) still have distinct z's: order is preserved, only compacted.
+    const unitZ = [...h.engine.units.values()].map((u) => h.engine.tiles.get(u.tileIds[0]!)!.z);
+    expect(new Set(unitZ).size).toBe(unitZ.length);
+  });
+
   it("keeps loose tiles in proportion on resize", () => {
     h.engine.addLetter("A", false);
     const u = [...h.engine.units.values()][0]!;
@@ -315,14 +334,35 @@ describe("Engine: crossword typing direction", () => {
 });
 
 describe("Engine: fixed tiles + categories (connections-1)", () => {
-  it("deals every fixed tile loose below the grid", () => {
+  it("deals every fixed tile loose into free space: clear of slots and of each other", () => {
     const h = harness(connections1, { w: 1200, h: 800 });
     const snap = h.engine.getSnapshot();
     expect(snap.tiles).toHaveLength(16);
     expect(snap.tiles.every((t) => !t.generated && !t.slotted)).toBe(true);
-    for (const u of h.engine.units.values())
-      expect(u.ay).toBeGreaterThanOrEqual(h.engine.layout.scatterTop - 4);
     expect(h.engine.canType).toBe(false);
+    const L = h.engine.layout;
+    const rects = [...h.engine.units.values()].map((u) => ({
+      x: u.ax,
+      y: u.ay,
+      w: L.tileW,
+      h: L.tileH,
+    }));
+    const overlaps = (a: (typeof rects)[0], b: (typeof rects)[0]) =>
+      a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+    for (let i = 0; i < rects.length; i++)
+      for (let j = i + 1; j < rects.length; j++) expect(overlaps(rects[i]!, rects[j]!)).toBe(false);
+    for (const r of rects)
+      for (const s of h.engine.slots.values())
+        expect(overlaps(r, { x: s.px, y: s.py, w: L.tileW, h: L.tileH })).toBe(false);
+    for (const r of rects) expect(r.y).toBeGreaterThanOrEqual(66);
+  });
+
+  it("defers the deal until the view reports a real board size", () => {
+    const progress = createProgressStore(createMemoryStorage());
+    const engine = new Engine({ puzzle: connections1, progress, random: seeded(3) });
+    expect(engine.getSnapshot().tiles).toHaveLength(0);
+    engine.resize(1200, 800);
+    expect(engine.getSnapshot().tiles).toHaveLength(16);
   });
 
   it("solves when each row holds a complete category (any order) and reports backdrops", () => {

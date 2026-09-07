@@ -37,6 +37,10 @@ export const DRAG_START_DIST = 6;
 export const DOUBLE_TAP_MS = 320;
 /** z-index for tiles resting in slots: always below loose tiles. */
 const SLOT_Z = 2;
+/** Loose tiles live in 10..MAX_LOOSE_Z, under the floating chrome (550+). */
+const MAX_LOOSE_Z = 400;
+/** A dragged unit rides above the clue and tile bank, under the trash target (900). */
+export const DRAG_Z = 850;
 
 export interface EngineOptions {
   puzzle: Puzzle;
@@ -154,7 +158,10 @@ export class Engine {
   private snapshot: Snapshot | null = null;
   private listeners = new Set<() => void>();
 
-  constructor(opts: EngineOptions, boardW = 390, boardH = 700) {
+  /** True until the view reports a real board size; fixed tiles are dealt then, into measured free space. */
+  private pendingDeal = false;
+
+  constructor(opts: EngineOptions, boardW?: number, boardH?: number) {
     this.puzzle = opts.puzzle;
     this.progress = opts.progress;
     this.random = opts.random ?? Math.random;
@@ -162,7 +169,7 @@ export class Engine {
     this.noHelp = opts.noHelp ?? (() => false);
     this.spawnBoundsProvider = opts.spawnBounds ?? (() => null);
     this.onEvent = opts.onEvent ?? (() => {});
-    this.layout = computeLayout(this.puzzle, boardW, boardH);
+    this.layout = computeLayout(this.puzzle, boardW ?? 390, boardH ?? 700);
 
     for (const def of this.puzzle.slots) {
       const { px, py } = slotPosition(this.layout, def.x, def.y);
@@ -176,7 +183,8 @@ export class Engine {
     this.genCounter = saved.genCounter ?? 1;
     this.mistakes = saved.mistakes ?? 0;
     if (saved.board) this.restoreBoard(saved.board);
-    else this.dealFreshBoard();
+    else if (boardW != null && boardH != null) this.dealFreshBoard();
+    else this.pendingDeal = true;
     this.maybeCheckSolution({ quiet: true });
     this.invalidate();
   }
@@ -252,7 +260,10 @@ export class Engine {
   resize(boardW: number, boardH: number): void {
     if (boardW <= 0 || boardH <= 0) return;
     const old = this.layout;
-    if (old.boardW === boardW && old.boardH === boardH) return;
+    if (old.boardW === boardW && old.boardH === boardH) {
+      if (this.pendingDeal) this.dealPending();
+      return;
+    }
     const fractions = new Map<number, Vec>();
     for (const u of this.units.values())
       fractions.set(u.id, { x: u.ax / old.boardW, y: u.ay / old.boardH });
@@ -265,7 +276,14 @@ export class Engine {
       }
     }
     clampUnits(this.units.values(), this.layout);
+    if (this.pendingDeal) this.dealPending();
     this.invalidate();
+  }
+
+  private dealPending(): void {
+    this.pendingDeal = false;
+    this.dealFreshBoard();
+    this.maybeCheckSolution({ quiet: true });
   }
 
   private applyLayout(L: Layout): void {
@@ -317,6 +335,7 @@ export class Engine {
   }
 
   private bringUnitToFront(u: UnitState): void {
+    if (this.zSeq >= MAX_LOOSE_Z) this.compactZ();
     this.zSeq += 1;
     for (const tid of u.tileIds) {
       const t = this.tiles.get(tid);
@@ -324,22 +343,24 @@ export class Engine {
     }
   }
 
-  private trayDealSpot(index: number): Vec {
-    const { tileW, tileH, scatterTop, scatterBottom, boardW } = this.layout;
-    const cols = Math.max(2, Math.floor((boardW - 28) / (tileW + 10)));
-    const col = index % cols;
-    const row = Math.floor(index / cols);
-    const rowsW = cols * (tileW + 10) - 10;
-    const startX = Math.max(10, (boardW - rowsW) / 2);
-    const rowH = tileH + 12;
-    return {
-      x: clamp(startX + col * (tileW + 10) + (this.random() - 0.5) * 8, 4, boardW - tileW - 4),
-      y: clamp(
-        scatterTop + row * rowH + (this.random() - 0.5) * 6,
-        scatterTop,
-        Math.max(scatterTop, scatterBottom),
-      ),
-    };
+  /** Reassign loose tiles' z-indexes 10.. in their current order so they never climb into the chrome. */
+  private compactZ(): void {
+    const loose = [...this.tiles.values()].filter((t) => !t.slotId).sort((a, b) => a.z - b.z);
+    let z = 10;
+    let last = -1;
+    for (const t of loose) {
+      if (t.z !== last) {
+        last = t.z;
+        z++;
+      }
+      t.z = z;
+    }
+    this.zSeq = z;
+  }
+
+  /** The unit under the pointer, if any. Its tiles render at DRAG_Z, above the bank and clue. */
+  get draggedUnitId(): number | null {
+    return this.drag?.unitId ?? null;
   }
 
   private dealFreshBoard(): void {
@@ -356,7 +377,7 @@ export class Engine {
     const now = this.clock();
     defs.forEach((def, index) => {
       const tile = this.createTile(def.id, def.text, false);
-      const spot = this.trayDealSpot(index);
+      const spot = this.freeSpot();
       const unit = this.createUnit([tile.id], spot.x, spot.y);
       tile.x = spot.x;
       tile.y = spot.y;
@@ -396,10 +417,9 @@ export class Engine {
       });
       this.bringUnitToFront(unit);
     }
-    let dealIndex = 0;
     for (const tile of this.tiles.values()) {
       if (tile.slotId || tile.unitId) continue;
-      const spot = this.trayDealSpot(dealIndex++);
+      const spot = this.freeSpot();
       this.createUnit([tile.id], spot.x, spot.y);
       tile.x = spot.x;
       tile.y = spot.y;
@@ -1010,23 +1030,41 @@ export class Engine {
     this.invalidate();
   }
 
-  private freeSpawnSpot(): Vec {
+  /**
+   * A resting spot for a new loose tile: inside the board, clear of the clue
+   * panel and tile bank (the view reports those), and, as far as space allows,
+   * not on top of a slot or another tile. Rejection-samples candidates and
+   * falls back to the least-overlapping one when the board is crowded; the
+   * physics then nudges any residual overlap apart.
+   */
+  private freeSpot(): Vec {
     const { tileW, tileH, boardW, boardH } = this.layout;
     const bounds = this.spawnBoundsProvider();
     const top = Math.max(66, bounds?.top ?? 0);
     let bottom = Math.min(boardH - tileH - 10, (bounds?.bottom ?? Infinity) - tileH);
     if (bottom < top) bottom = top;
+    const slotPad = 6;
+    const obstacles: { x: number; y: number; w: number; h: number; weight: number }[] = [];
+    for (const u of this.units.values())
+      obstacles.push({ x: u.ax, y: u.ay, w: unitWidth(u, this.layout), h: tileH, weight: 1 });
+    for (const sl of this.slots.values())
+      obstacles.push({
+        x: sl.px - slotPad,
+        y: sl.py - slotPad,
+        w: tileW + slotPad * 2,
+        h: tileH + slotPad * 2,
+        weight: 0.6, // prefer a clear patch of board, but a slot beats a tile pile
+      });
     let best: Vec = { x: boardW / 2 - tileW / 2, y: (top + bottom) / 2 };
     let bestOv = Infinity;
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 60; i++) {
       const x = 6 + this.random() * Math.max(1, boardW - tileW - 12);
       const y = top + this.random() * Math.max(1, bottom - top);
       let ov = 0;
-      for (const u of this.units.values()) {
-        const w = unitWidth(u, this.layout);
-        const ox = Math.min(x + tileW, u.ax + w) - Math.max(x, u.ax);
-        const oy = Math.min(y + tileH, u.ay + tileH) - Math.max(y, u.ay);
-        if (ox > 0 && oy > 0) ov += ox * oy;
+      for (const o of obstacles) {
+        const ox = Math.min(x + tileW, o.x + o.w) - Math.max(x, o.x);
+        const oy = Math.min(y + tileH, o.y + o.h) - Math.max(y, o.y);
+        if (ox > 0 && oy > 0) ov += ox * oy * o.weight;
       }
       if (ov === 0) return { x, y };
       if (ov < bestOv) {
@@ -1050,7 +1088,7 @@ export class Engine {
         x: clamp(pos.x - tileW / 2 + Math.cos(ang) * rad, 4, boardW - tileW - 4),
         y: clamp(pos.y - tileH / 2 + Math.sin(ang) * rad, 4, boardH - tileH - 4),
       };
-    } else spot = this.freeSpawnSpot();
+    } else spot = this.freeSpot();
     const unit = this.createUnit([tile.id], spot.x, spot.y);
     tile.x = unit.ax;
     tile.y = unit.ay;

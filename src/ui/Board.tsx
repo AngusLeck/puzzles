@@ -1,12 +1,11 @@
 import {
   memo,
   useEffect,
-  useLayoutEffect,
   useRef,
   type PointerEvent as ReactPointerEvent,
   type RefObject,
 } from "react";
-import { Engine, type SlotView, type Snapshot, type TileView } from "@/engine/engine";
+import { DRAG_Z, Engine, type SlotView, type Snapshot, type TileView } from "@/engine/engine";
 import type { EngineEvent } from "@/engine/types";
 
 export const CATEGORY_COLORS = ["var(--cat-1)", "var(--cat-2)", "var(--cat-3)", "var(--cat-4)"];
@@ -33,8 +32,11 @@ export function Board({ engine, snapshot, events, boardRef, trashRef }: Props) {
   const fxRef = useRef<HTMLDivElement>(null);
   const shakeTimer = useRef(0);
 
-  // Keep the engine's idea of the board size in step with the element.
-  useLayoutEffect(() => {
+  // Keep the engine's idea of the board size in step with the element. A
+  // passive effect, not a layout effect: the first resize deals the tiles, and
+  // that needs the sibling clue panel / bank refs, which React attaches in tree
+  // order during the layout phase (i.e. after this component's layout effects).
+  useEffect(() => {
     const el = boardRef.current;
     if (!el) return;
     const measure = () => engine.resize(el.clientWidth, el.clientHeight);
@@ -51,12 +53,16 @@ export function Board({ engine, snapshot, events, boardRef, trashRef }: Props) {
     const tick = (now: number) => {
       engine.step(now);
       const L = engine.layout;
+      const draggedUnit = engine.draggedUnitId;
       for (const tile of engine.tiles.values()) {
         const el = tileEls.current.get(tile.id);
         if (!el) continue;
         const t = Engine.tileTransform(tile, now, L);
         el.style.transform = `translate(${t.x.toFixed(2)}px,${t.y.toFixed(2)}px) rotate(${t.r.toFixed(2)}deg) scale(${t.s.toFixed(3)})`;
-        const z = String(tile.z);
+        // Only the dragged unit rises above the chrome; everything else keeps its own z.
+        const z = String(
+          draggedUnit != null && !tile.slotId && tile.unitId === draggedUnit ? DRAG_Z : tile.z,
+        );
         if (el.style.zIndex !== z) el.style.zIndex = z;
       }
       const targets = engine.targetSlotIds;
@@ -183,7 +189,7 @@ export function Board({ engine, snapshot, events, boardRef, trashRef }: Props) {
           />
         ))}
       </div>
-      <div className={"tileLayer" + (snapshot.dragging ? " dragging" : "")}>
+      <div className="tileLayer">
         {snapshot.tiles.map((t) => (
           <Tile
             key={t.id}
