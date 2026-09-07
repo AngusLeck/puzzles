@@ -161,6 +161,9 @@ export class Engine {
   /** True until the view reports a real board size; fixed tiles are dealt then, into measured free space. */
   private pendingDeal = false;
 
+  /** Restored boards snap into place on the first measured resize instead of easing in. */
+  private settleOnResize = false;
+
   constructor(opts: EngineOptions, boardW?: number, boardH?: number) {
     this.puzzle = opts.puzzle;
     this.progress = opts.progress;
@@ -182,7 +185,10 @@ export class Engine {
     this.revealedHints = Array.isArray(saved.hints) ? [...saved.hints] : [];
     this.genCounter = saved.genCounter ?? 1;
     this.mistakes = saved.mistakes ?? 0;
-    if (saved.board) this.restoreBoard(saved.board);
+    if (saved.board) {
+      this.restoreBoard(saved.board);
+      this.settleOnResize = true;
+    }
     else if (boardW != null && boardH != null) this.dealFreshBoard();
     else this.pendingDeal = true;
     this.maybeCheckSolution({ quiet: true });
@@ -262,6 +268,10 @@ export class Engine {
     const old = this.layout;
     if (old.boardW === boardW && old.boardH === boardH) {
       if (this.pendingDeal) this.dealPending();
+      if (this.settleOnResize) {
+        this.settleOnResize = false;
+        this.settleTiles();
+      }
       return;
     }
     const fractions = new Map<number, Vec>();
@@ -277,6 +287,12 @@ export class Engine {
     }
     clampUnits(this.units.values(), this.layout);
     if (this.pendingDeal) this.dealPending();
+    // The board is measured after construction, so the first real size would
+    // otherwise make restored tiles ease in from their placeholder positions.
+    if (this.settleOnResize) {
+      this.settleOnResize = false;
+      this.settleTiles();
+    }
     this.invalidate();
   }
 
@@ -488,26 +504,11 @@ export class Engine {
     }
 
     for (const tile of this.tiles.values()) {
-      let targetX: number;
-      let targetY: number;
-      let targetRot = 0;
-      let targetScale = tile.dying ? 0 : 1;
       const isDragged = !!this.drag && !tile.slotId && tile.unitId === this.drag.unitId;
-      const slot = tile.slotId ? this.slots.get(tile.slotId) : undefined;
-      const unit = tile.unitId != null ? this.units.get(tile.unitId) : undefined;
-      if (slot) {
-        targetX = slot.px;
-        targetY = slot.py;
-      } else if (unit) {
-        const idx = unit.tileIds.indexOf(tile.id);
-        targetX = unit.ax + tileOffsetInUnit(idx, L);
-        targetY = unit.ay;
-        targetRot = isDragged ? 0 : tile.rot;
-        if (isDragged) targetScale = 1.12;
-      } else {
-        targetX = tile.x;
-        targetY = tile.y;
-      }
+      const { x: targetX, y: targetY, r: targetRot, s: targetScale } = this.tileTarget(
+        tile,
+        isDragged,
+      );
       const ease = isDragged ? 0.4 : 0.19; // heavy lag
       tile.x += (targetX - tile.x) * ease;
       tile.y += (targetY - tile.y) * ease;
@@ -516,6 +517,38 @@ export class Engine {
       if (tile.hopAt && now - tile.hopAt >= 380) tile.hopAt = 0;
       if (tile.pulseAt && now - tile.pulseAt >= 210) tile.pulseAt = 0;
       if (tile.snapAt && now - tile.snapAt >= 230) tile.snapAt = 0;
+    }
+  }
+
+  /** Where a tile wants to be right now, before any transient hop/pulse offsets. */
+  private tileTarget(
+    tile: TileState,
+    isDragged: boolean,
+  ): { x: number; y: number; r: number; s: number } {
+    const L = this.layout;
+    const slot = tile.slotId ? this.slots.get(tile.slotId) : undefined;
+    const unit = tile.unitId != null ? this.units.get(tile.unitId) : undefined;
+    const scale = tile.dying ? 0 : 1;
+    if (slot) return { x: slot.px, y: slot.py, r: 0, s: scale };
+    if (unit) {
+      const idx = unit.tileIds.indexOf(tile.id);
+      return {
+        x: unit.ax + tileOffsetInUnit(idx, L),
+        y: unit.ay,
+        r: isDragged ? 0 : tile.rot,
+        s: isDragged ? 1.12 : scale,
+      };
+    }
+    return { x: tile.x, y: tile.y, r: 0, s: scale };
+  }
+
+  /** Place every tile exactly at its target, so a restored board appears in place. */
+  private settleTiles(): void {
+    for (const tile of this.tiles.values()) {
+      const t = this.tileTarget(tile, false);
+      tile.x = t.x;
+      tile.y = t.y;
+      tile.r = t.r;
     }
   }
 
