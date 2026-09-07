@@ -135,8 +135,8 @@ test("connections: fixed tiles deal loose and drag into rows", async ({ page }) 
   // On a phone the deal is crowded, so grab whichever tile is topmost under NAVY's centre.
   const box = await tile(page, "NAVY").boundingBox();
   const picked = await page.evaluate(
-    ([x, y]) => document.elementFromPoint(x, y)?.closest(".tile")?.textContent ?? "NAVY",
-    [box!.x + box!.width / 2, box!.y + box!.height / 2],
+    ({ x, y }) => document.elementFromPoint(x, y)?.closest(".tile")?.textContent ?? "NAVY",
+    { x: box!.x + box!.width / 2, y: box!.y + box!.height / 2 },
   );
   await dragTo(page, tile(page, picked), slot(page, "r1c1"));
   await expect(tile(page, picked)).toHaveAttribute("data-slotted", "1");
