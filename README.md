@@ -1,144 +1,139 @@
 # Puzzles
 
-A standalone tile-and-slot puzzle page. No build step, no dependencies — open
-`index.html` in a browser, or host the folder on GitHub Pages.
+A tile-and-slot puzzle page for sharing cryptics, crosswords and connections
+with friends. Deployed to GitHub Pages on every merge to `main`.
 
 Every puzzle is the same generic shape: a **prompt**, some **slots** arranged on
 a grid, and **tiles** to fill them with (either a fixed set, or a letter
-generator the player controls). Different puzzle types — cryptic crosswords,
-connections, unscrambles — are just different compositions of those pieces.
+generator the player controls). Different puzzle types are just different
+compositions of those pieces; the engine never learns about "crosswords".
 
-## Files
+## Develop
 
-- `index.html` — the whole app (UI, drag/snap engine, hints, storage).
-- `puzzles.js` — the puzzle data, edited by hand. It assigns a JSON array to
-  `window.PUZZLES`. (It's a `.js` wrapper around JSON only so the page also
-  works from `file://`, where fetching a `.json` file is blocked.)
-
-Player progress (solves, hints revealed, board state) is kept in
-`localStorage` under `puzzles-progress-v1`.
-
-## Puzzle schema
-
-```jsonc
-{
-  "id": "cryptic-1",             // required, unique, stable. Keyed on for progress
-                                 //   AND used as the shareable URL route (#/<id>),
-                                 //   so keep it neutral/spoiler-free and don't rename it
-  "title": "Mini Cryptic №1",    // shown in the list and puzzle header
-  "subtitle": "optional blurb",  // shown on the list card
-  "releaseDate": "2026-12-25",   // optional; puzzle is off the list until this local date
-  "expiryDate": "2026-12-26",    // optional; last local date on the list, inclusive
-  "attribution": "RAD",          // optional author credit (list badge + "— RAD" under the prompt)
-  "prompt": "ACROSS\n1. ...",    // plain text, newlines respected
-
-  // --- tiles: provide one (or both) of these ---
-  "tiles": [                     // fixed tiles the puzzle starts with
-    { "id": "t01", "text": "NAVY" }
-  ],
-  "tileGenerator": {             // lets the player mint/remove letter tiles
-    "type": "letters",           // shows an A–Z strip (desktop: also type; backspace removes)
-    "letters": "AEIOU"           // optional subset; defaults to A–Z
-  },
-
-  // --- slots: positions are grid units, fractions allowed (for row gaps) ---
-  "slots": [
-    { "id": "c1", "x": 0, "y": 0,
-      "label": "1",              // optional small corner label (crossword numbering)
-      "centerLabel": "A" }       // optional large faded label filling the slot;
-  ],                             //   visible until a tile covers it
-  "slotGap": 8,                  // optional px between slots (default 8)
-  "tileAspect": 2.4,             // optional width/height ratio (word tiles; default 1)
-  "chainTiles": false,           // optional; tiles snapping side-by-side into draggable
-                                 // words defaults to ON when there's a tileGenerator
-
-  // --- checks: solved when ALL checks pass and every slot is filled ---
-  "checks": [
-    { "type": "slots",           // exact tile text per slot (case-insensitive;
-      "answers": {               //  value may be a string or an array of accepted strings)
-        "c1": "C", "c2": ["A", "Á"]
-      }
-    },
-    { "type": "categories",      // each slot group must hold exactly one full
-      "slotGroups": [["r1c1", "r1c2"]],   // category (any category ↔ any group)
-      "categories": [
-        { "label": "Shades of blue", "tiles": ["NAVY", "SKY"] }
-      ]
-    },
-    { "type": "any" }            // passes as soon as every slot is filled, whatever
-  ],                             //   the tiles (for open-ended / joke puzzles)
-
-  // --- hints, grouped by size; players reveal them in file order per size ---
-  //     each distinct `size` becomes its own reveal button. The ladder should
-  //     guide, never hand over the answer: "definition" (just name/highlight the
-  //     definition) → "wordplay" (name the indicators and their *type*, not the
-  //     result) → "fodder" (highlight the words the indicators act on). Add a
-  //     "bonus" size for a "try this variation of the same clue" nudge. Keep the
-  //     puzzle's title/subtitle neutral too — don't echo the definition.
-  "hints": [
-    {
-      "size": "definition",      // any label: "small" / "definition" / "bonus" / ...
-      "text": "Shown to the player.",
-      "highlight": {             // all optional
-        "prompt": ["scattered"], // substrings of the prompt to mark
-        "slots": ["c1", "c2"],   // slot ids to glow
-        "tiles": ["KIDNEY"]      // tile ids OR tile texts to glow
-      }
-    }
-  ]
-}
+```sh
+yarn            # install
+yarn dev        # http://localhost:5173
+yarn check      # typecheck + lint + unit tests
+yarn e2e        # Playwright smoke tests against a production build (run `yarn build` first)
+yarn build      # dist/
 ```
 
-## Release mechanics
+Node 20+, Yarn 1. The original single-file implementation lives in
+[`legacy/`](legacy/) as a reference for the intended look and feel; it is not
+deployed.
 
-`releaseDate` and `expiryDate` bracket the window a puzzle spends **on the
-list**: it appears on the release date and rolls off after the expiry date
-(inclusive). Either can be left out for an open-ended end.
+## Adding a puzzle
 
-Both are about browsing only. **Every puzzle is always reachable at its own
-`#/<id>` link** — before its release, after its run has ended, forever. So a
-weekend drop is `releaseDate` on the Saturday and `expiryDate` on the Sunday:
-it's on the front page for those two days, and anyone who kept the link can
-still play it next year. Links never rot, which is also why ids need to stay
-stable.
+Create `src/puzzles/data/<id>.ts`:
 
-Dates are compared against the *player's* local date, so a drop appears and
-disappears at each player's own midnight.
+```ts
+import { definePuzzle } from "../define";
 
-Checks compose: a puzzle can mix `slots` and `categories` checks (or gain new
-check types later) without the engine knowing anything about "crosswords" or
-"connections".
+export default definePuzzle({
+  id: "cryptic-18", // stable, spoiler-free, never renamed: it's the URL (#/cryptic-18) and the progress key
+  title: "Neutral title",
+  attribution: "AD",
+  releaseDate: "2026-09-18", // optional; listed from this local date. Direct links always work.
+  prompt: "The clue goes here. (5)",
+  tileGenerator: { type: "letters" },
+  slots: [
+    { id: "s1", x: 0, y: 0 },
+    { id: "s2", x: 1, y: 0 },
+    // ...
+  ],
+  checks: [{ type: "slots", answers: { s1: "A", s2: "B" } }],
+  hints: [
+    { size: "definition", text: "...", highlight: { prompt: ["a substring"] } },
+    { size: "wordplay", text: "...", highlight: { prompt: ["indicator"] } },
+  ],
+});
+```
 
-**Crosswords** are just a `slots` puzzle where words share cells: give the two
-crossing words a single slot at the intersection (one id, one letter) and both
-"words" are satisfied by that one tile. Number the starting cells with `label`.
-See the `carpenter-crossword` puzzle: one 10-letter Down crossing two Acrosses.
+That's it: the file is picked up automatically (`src/puzzles/index.ts` globs the
+directory), and `yarn test` validates it against the schema in
+`src/puzzles/schema.ts`: unique ids, every referenced slot exists, every hint
+highlight actually occurs in the prompt, dates are well-formed. A typo fails CI
+rather than a friend's browser.
 
-## Interactions
+### Schema, briefly
 
-The whole screen is the play area — slots float in space and tiles can be
-dragged anywhere. Tiles are heavy: they lag behind the pointer, slide across
-each other with friction, keep a little momentum on release, and click into
-slots with a snap.
+| field                     | notes                                                                                  |
+| ------------------------- | -------------------------------------------------------------------------------------- |
+| `id`, `title`, `subtitle` | id is the route and progress key; keep titles neutral (don't echo the definition)      |
+| `releaseDate`             | listed from this local date, inclusive                                                 |
+| `expiryDate`              | last listed local date, inclusive; the link keeps working forever                      |
+| `attribution`             | list badge + "— X" under the prompt                                                    |
+| `prompt`                  | plain text; newlines kept; `^{…}` / `_{…}` render as superscript / subscript           |
+| `tiles`                   | fixed tiles `{ id, text }`, dealt loose below the grid                                 |
+| `tileGenerator`           | `{ type: "letters", letters?: "AEIOU" }` shows the roll-up A–Z bank and enables typing |
+| `slots`                   | `{ id, x, y, label?, centerLabel? }`; grid units, fractions allowed (row gaps)         |
+| `slotGap`, `tileAspect`   | px between slots (8); tile width/height (1)                                            |
+| `chainTiles`              | side-by-side tiles snap into a word; defaults to on when there's a generator           |
+| `checks`                  | all must pass, and every slot must be filled                                           |
+| `hints`                   | grouped by `size`; players reveal in file order per size                               |
 
-- **Drag** tiles into slots; nearby slots highlight while dragging. Dropping on
-  an occupied slot swaps the old tile out.
-- **Chaining** (on by default when there's a `tileGenerator`): tiles dropped
-  side-by-side snap into a word that drags as one piece; a chain dropped over a
-  run of empty slots fills all of them.
-- **Double-tap**: pops a placed tile out of its slot / detaches a tile from a chain.
-- **Tile bank** (when a `tileGenerator` is present): roll the drawer up from the
-  bottom edge and tap letters to mint tiles.
-- **Select & type**: tap a slot to select it, then type — each letter drops a
-  tile straight into the slot and the selection advances along the linear run
-  (across or down). Tapping the same slot again toggles direction; arrows move
-  the selection; backspace clears and steps back. (Only when tiles can be added.)
-- Generated tiles are deleted by dropping them on the ✕ that appears while dragging.
-- **Sound**: synthesized stone clacks for pick-up / snap / place / remove / solve,
-  a roll for the bank, and a grainy grind while dragging (subtle across the board,
-  deeper against other tiles). Toggle with the 🔊 button (persisted).
-- **Theme**: the 🌗/☀️/🌙 button cycles Auto → Light → Dark (persisted); Auto
-  follows the OS. Available on the list and in-puzzle. Defaults to Light even on
-  a dark-mode OS, until the player picks something.
-- The puzzle auto-checks whenever every slot is filled: wrong shakes, right
-  celebrates.
+Check kinds:
+
+- `slots`: exact text per slot, case-insensitive; a value may be an array of accepted strings.
+- `categories`: each `slotGroups[i]` must hold exactly one full category, any category ↔ any group.
+- `any`: passes once every slot is filled (open-ended / joke puzzles).
+
+**Crosswords** are a `slots` puzzle where words share cells: give crossing words
+a single slot at the intersection. Number the starting cells with `label`.
+
+New check kinds are one entry in `src/engine/checks.ts` (pass/fail + which
+tiles are wrong); nothing else changes.
+
+### Release mechanics
+
+`releaseDate` / `expiryDate` bracket the window a puzzle is **on the list**.
+Every puzzle is always reachable at `#/<id>`, before release and after its run,
+so a weekend drop is `releaseDate` Saturday, `expiryDate` Sunday. Dates compare
+against the _player's_ local date.
+
+## Interactions (what the engine preserves)
+
+The whole screen is the board. Tiles are heavy: they lag the pointer, resolve
+overlaps by sliding around neighbours, keep a little momentum on a flick, and
+click into slots with a snap.
+
+- **Drag** tiles into slots; candidate slots highlight during the drag. Dropping on an occupied slot swaps the old tile out.
+- **Chaining** (with a generator): tiles dropped side by side snap into a word that drags as one piece; a chain dropped over a run of empty slots fills them all.
+- **Double-tap** pops a placed tile out / detaches a tile from a chain.
+- **Tile bank**: roll the drawer up, tap to mint, or press-and-drag a tile straight out.
+- **Select & type**: tap a slot, type; the selection advances along the run. Tap again to toggle across/down; arrows move; backspace clears and steps back. Tap a loose word to append to it.
+- **Trash**: generated tiles are deleted by dropping them on the ✕ that appears while dragging.
+- **Sound**: synthesised stone clacks and a speed-driven grind while dragging (Web Audio, no samples). 🔊 toggles, persisted.
+- **Theme**: 🌗/☀️/🌙 cycles Auto → Light → Dark, persisted; defaults to Light.
+- **Help modes**: 👼 ejects only wrong tiles on a mistake; 😈 clears the whole board.
+- Auto-check when every slot is filled: wrong shakes and counts a mistake, right celebrates and freezes the solution (the rest of the board stays live).
+
+Progress (solves, hints, mistakes, board state) is in `localStorage` under
+`puzzles-progress-v1`, the same key and shape as before the rewrite, so nobody
+loses anything on upgrade.
+
+## Architecture
+
+```
+src/
+  puzzles/      data/*.ts (one puzzle per file), schema.ts (zod, tests only), index.ts (glob + order)
+  engine/       framework-free game model
+    engine.ts   Engine: state, commands (pointer/typing/hints/reset), rAF step(), immutable Snapshot for the UI
+    physics.ts  overlap resolution, friction, flick momentum
+    layout.ts   grid fitting; checks.ts pluggable check kinds; grid.ts typing runs
+    richtext.ts prompt markup + highlight segmentation; release.ts list windows; progress.ts persistence
+  audio/        Sound: Web Audio synth driven by engine events
+  ui/           React 19 components (chrome, panels, list) + Board.tsx (DOM renderer)
+  state/        persisted preferences
+  app/          hash router, theme, service wiring
+e2e/            Playwright smoke tests
+legacy/         the original single-file implementation (reference only)
+```
+
+The hot path bypasses React: `Board.tsx` runs a `requestAnimationFrame` loop
+that calls `engine.step()` and writes tile transforms / z-order / drop-target
+classes straight onto the DOM nodes. React only re-renders on discrete changes
+(a tile placed, a hint revealed) via `useSyncExternalStore` on the engine's
+snapshot. The engine has no DOM dependency and is exercised directly by the
+Vitest suite (`src/engine/engine.test.ts`), including drag, chaining,
+swapping, ejecting, persistence round-trips and category matching.
